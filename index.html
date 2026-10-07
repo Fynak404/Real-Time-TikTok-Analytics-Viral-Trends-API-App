@@ -3,22 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JNX Global | TikTok Analytics Engine</title>
+    <title>JNX Global | TikTok Analytics Engine (GHL Edition)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        mono: ['ui-monospace', 'SFMono-Regular', 'Consolas', 'monospace']
+                        mono: ['JetBrains Mono', 'Consolas', 'monospace']
                     },
                     colors: {
                         bgMain: '#09090b',
                         bgPanel: '#121216',
+                        bgCard: '#18181b',
                         borderMain: '#27272a',
+                        borderLight: '#3f3f46',
                         accent: '#6366f1',
                         accentHover: '#4f46e5'
                     }
@@ -35,11 +37,15 @@
         .tiktok-gradient {
             background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
         }
+        .glass-panel {
+            background: rgba(18, 18, 22, 0.7);
+            backdrop-filter: blur(12px);
+        }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden antialiased selection:bg-accent selection:text-white">
+<body class="flex h-screen overflow-hidden antialiased selection:bg-accent selection:text-white font-sans">
 
-    <!-- BLOCK/ACCESS DENIED SCREEN -->
+    <!-- BLOCK / ACCESS DENIED SCREEN -->
     <div id="accessDeniedScreen" class="hidden fixed inset-0 bg-bgMain z-50 flex items-center justify-center p-6 text-center">
         <div class="bg-bgPanel border border-red-500/30 max-w-md w-full p-8 rounded-2xl shadow-2xl relative overflow-hidden space-y-5">
             <div class="w-16 h-16 bg-red-500/10 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-red-500/20">
@@ -61,10 +67,10 @@
     <div id="dashboardApp" class="hidden flex h-screen w-full overflow-hidden">
         
         <!-- LEFT NAVIGATION SIDEBAR -->
-        <aside class="w-72 bg-bgPanel border-r border-borderMain flex flex-col z-10 shrink-0">
+        <aside class="w-80 bg-bgPanel border-r border-borderMain flex flex-col z-10 shrink-0">
             <div class="p-5 border-b border-borderMain flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg tiktok-gradient flex items-center justify-center text-white font-bold text-sm shadow-md shadow-indigo-500/20">
+                    <div class="w-9 h-9 rounded-xl tiktok-gradient flex items-center justify-center text-white font-bold text-base shadow-lg shadow-indigo-500/20">
                         <i class="fab fa-tiktok"></i>
                     </div>
                     <div>
@@ -79,16 +85,19 @@
             <div class="flex-1 overflow-y-auto p-5 space-y-5">
                 
                 <!-- ACTIVE PLAN & USAGE CARD -->
-                <div class="bg-bgMain border border-borderMain rounded-xl p-3.5 space-y-2">
+                <div class="bg-bgMain border border-borderMain rounded-xl p-4 space-y-3">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-[9px] text-zinc-500 uppercase font-semibold">Active Plan</p>
-                            <span id="tierBadge" class="text-xs font-bold text-accent">BASIC</span>
+                            <p class="text-[9px] text-zinc-500 uppercase font-semibold tracking-wider">Active Plan</p>
+                            <span id="tierBadge" class="text-xs font-bold text-accent tracking-wide">BASIC</span>
                         </div>
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="flex h-2 w-2 relative">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
                     </div>
                     
-                    <div id="usageBanner" class="pt-2 border-t border-borderMain/60 flex justify-between items-center text-[11px] font-mono hidden">
+                    <div id="usageBanner" class="pt-2 border-t border-borderMain/60 flex justify-between items-center text-[11px] font-mono">
                         <span class="text-zinc-400">Monthly Usage:</span>
                         <span id="usageText" class="text-accent font-bold">0 / 10 Requests</span>
                     </div>
@@ -109,7 +118,7 @@
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Country</label>
                         <select id="countrySelect" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 font-mono focus:outline-none focus:border-accent">
-                            <!-- Ingevuld via JS op basis van Trend Type -->
+                            <!-- JS dynamic fill -->
                         </select>
                     </div>
 
@@ -117,9 +126,9 @@
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Time Period</label>
                         <div class="flex bg-bgMain border border-borderMain rounded-lg p-1 gap-1">
-                            <button type="button" onclick="setPeriod('7')" class="period-btn flex-1 py-1 text-xs rounded-md bg-accent text-white font-medium" data-val="7">7 Days</button>
-                            <button type="button" onclick="setPeriod('30')" class="period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white" data-val="30">30 Days</button>
-                            <button type="button" onclick="setPeriod('90')" class="period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white" data-val="90">90 Days</button>
+                            <button type="button" onclick="setPeriod('7')" class="period-btn flex-1 py-1 text-xs rounded-md bg-accent text-white font-medium transition-all" data-val="7">7 Days</button>
+                            <button type="button" onclick="setPeriod('30')" class="period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white transition-all" data-val="30">30 Days</button>
+                            <button type="button" onclick="setPeriod('90')" class="period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white transition-all" data-val="90">90 Days</button>
                         </div>
                         <input type="hidden" id="period" value="7">
                     </div>
@@ -128,7 +137,7 @@
                     <div class="space-y-2 pt-1">
                         <div class="flex justify-between items-center">
                             <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Results Limit</label>
-                            <span id="limitValue" class="text-xs font-mono text-accent bg-accent/10 px-2 py-0.5 rounded-md">5</span>
+                            <span id="limitValue" class="text-xs font-mono text-accent bg-accent/10 px-2 py-0.5 rounded-md font-bold">5</span>
                         </div>
                         <input type="range" id="limit" min="1" max="5" value="5" class="w-full h-1 bg-borderMain rounded-lg appearance-none cursor-pointer accent-accent" oninput="onLimitSliderChange(this.value)">
                         <p id="limitTierHint" class="text-[10px] text-zinc-500 font-mono text-right">Max 5 items per request (BASIC)</p>
@@ -138,8 +147,8 @@
 
             <!-- EXECUTE BUTTON -->
             <div class="p-5 border-t border-borderMain">
-                <button id="searchBtn" onclick="executeEngine()" class="w-full bg-accent hover:bg-accentHover text-white text-xs font-semibold py-3 rounded-lg transition-all flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                    <i class="fas fa-search text-[11px]"></i>
+                <button id="searchBtn" onclick="executeEngine()" class="w-full bg-accent hover:bg-accentHover text-white text-xs font-bold py-3 rounded-xl transition-all flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.25)]">
+                    <i class="fas fa-bolt text-[11px]"></i>
                     <span>FETCH VIRAL TRENDS</span>
                 </button>
             </div>
@@ -149,12 +158,15 @@
         <main class="flex-1 flex flex-col bg-bgMain">
             <!-- TOP NAVBAR -->
             <header class="h-14 border-b border-borderMain flex items-center justify-between px-6 bg-bgMain">
-                <div id="userInfoHeader" class="flex items-center gap-2 text-xs text-zinc-400">
-                    <span id="statusIndicator" class="w-2 h-2 rounded-full bg-green-500"></span>
-                    <span id="statusText" class="font-mono text-[11px]">GHL Session Connected</span>
+                <div id="userInfoHeader" class="flex items-center gap-3 text-xs text-zinc-400">
+                    <span class="flex h-2 w-2 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span id="statusText" class="font-mono text-[11px]">GHL Live Session Active</span>
                 </div>
                 
-                <button id="toggleViewBtn" onclick="toggleView()" class="hidden text-xs px-3 py-1.5 border border-borderMain rounded-lg hover:bg-borderMain text-zinc-300 transition-colors flex items-center gap-2 font-mono">
+                <button id="toggleViewBtn" onclick="toggleView()" class="hidden text-xs px-3 py-1.5 border border-borderMain rounded-lg hover:bg-bgPanel text-zinc-300 transition-colors flex items-center gap-2 font-mono">
                     <i class="fas fa-code text-[11px]"></i>
                     <span id="toggleText">Switch to Pure Code</span>
                 </button>
@@ -165,32 +177,34 @@
                 
                 <!-- EMPTY STATE -->
                 <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center">
-                    <i class="fas fa-chart-line text-4xl text-borderMain mb-3"></i>
-                    <h3 class="text-sm font-medium text-zinc-300">Ready to Scan Trends</h3>
-                    <p class="text-xs text-zinc-500 mt-1 max-w-xs">Select your parameters in the sidebar and press "FETCH VIRAL TRENDS".</p>
+                    <div class="w-16 h-16 rounded-2xl bg-borderMain/30 flex items-center justify-center text-zinc-600 mb-4 border border-borderMain">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                    </div>
+                    <h3 class="text-sm font-semibold text-zinc-200">Ready to Scan Live Ecosystem</h3>
+                    <p class="text-xs text-zinc-500 mt-1 max-w-xs">Select your parameters in the sidebar and trigger "FETCH VIRAL TRENDS".</p>
                 </div>
 
                 <!-- LOADING STATE -->
                 <div id="loadingState" class="hidden h-full flex flex-col items-center justify-center">
-                    <div class="w-80 text-center space-y-3">
-                        <i class="fas fa-circle-notch fa-spin text-2xl text-accent"></i>
-                        <p class="text-xs font-mono text-zinc-400">Scanning TikTok trends live...</p>
+                    <div class="w-80 text-center space-y-4">
+                        <div class="w-12 h-12 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        <p class="text-xs font-mono text-zinc-400">Performing live scan on TikTok feeds...</p>
                     </div>
                 </div>
 
-                <!-- VISUAL CLEAN CARDS GRID -->
-                <div id="resultsGrid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto pb-8">
-                    <!-- Dynamic trends data injects here -->
+                <!-- VISUAL RICH CARDS GRID (100% RapidAPI Look) -->
+                <div id="resultsGrid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto pb-10">
+                    <!-- Dynamic rich trends inject here -->
                 </div>
 
                 <!-- PURE CODE OUTPUT -->
-                <div id="codeView" class="hidden h-full max-w-5xl mx-auto">
-                    <div class="bg-bgPanel border border-borderMain rounded-xl h-full overflow-hidden flex flex-col">
-                        <div class="bg-bgMain border-b border-borderMain px-4 py-2 flex justify-between items-center text-[11px] font-mono">
-                            <span class="text-zinc-500">RAW_JSON_PAYLOAD</span>
-                            <span class="text-green-400">200 OK</span>
+                <div id="codeView" class="hidden h-full max-w-6xl mx-auto">
+                    <div class="bg-bgPanel border border-borderMain rounded-2xl h-full overflow-hidden flex flex-col shadow-2xl">
+                        <div class="bg-bgMain border-b border-borderMain px-5 py-3 flex justify-between items-center text-[11px] font-mono">
+                            <span class="text-zinc-500 flex items-center gap-2"><i class="fas fa-terminal"></i> RAW_JSON_PAYLOAD</span>
+                            <span class="text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20 font-bold">200 OK</span>
                         </div>
-                        <pre class="p-4 text-xs font-mono text-zinc-300 overflow-auto flex-1"><code id="codeContent"></code></pre>
+                        <pre class="p-5 text-xs font-mono text-zinc-300 overflow-auto flex-1 leading-relaxed"><code id="codeContent"></code></pre>
                     </div>
                 </div>
 
@@ -199,15 +213,15 @@
     </div>
 
     <!-- PAYWALL / LIMIT REACHED MODAL -->
-    <div id="paywallModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="paywallModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
         <div class="bg-bgPanel max-w-md w-full p-6 rounded-2xl border border-indigo-500/30 text-center relative space-y-4 shadow-2xl">
             <div class="w-14 h-14 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto text-xl border border-indigo-500/20">
                 <i class="fas fa-rocket"></i>
             </div>
             <div>
-                <h2 class="text-xl font-bold text-white mb-1">Monthly Limit Reached!</h2>
+                <h2 class="text-xl font-bold text-white mb-1">Limit Reached!</h2>
                 <p id="paywallMessage" class="text-zinc-400 text-xs leading-relaxed">
-                    You have reached the maximum number of searches allowed for your current tier. Upgrade your plan to instantly unlock more requests.
+                    You have reached the maximum number of searches allowed for your plan. Upgrade to instantly unlock higher throughput.
                 </p>
             </div>
             <a id="paywallUpgradeBtn" href="#" target="_blank" class="block w-full py-3 rounded-xl font-semibold text-xs text-white tiktok-gradient shadow-lg hover:opacity-95 transition-all">
@@ -220,8 +234,6 @@
     <!-- LOGIC SCRIPT -->
     <script>
         const RENDER_BACKEND_URL = "https://jnx-tiktok-api.onrender.com/api/v1/tiktok/ghl-trends";
-        
-        // TODO: VUL HIER JE GHL FUNNEL/CHECKOUT URL IN VOOR UPGRADES
         const UPGRADE_URL = "https://jouwdomein.com/upgrade"; 
 
         let currentGhlLocationId = null;
@@ -305,7 +317,7 @@
             currentGhlUserTier = (urlParams.get('tier') || urlParams.get('plan') || window.ghlUserPlan || "BASIC").toUpperCase();
 
             if (!currentGhlLocationId || currentGhlLocationId === "UNKNOWN") {
-                showAccessDenied("No valid GoHighLevel session detected. Please launch this app directly from inside your GHL account.");
+                showAccessDenied("No valid GoHighLevel session detected. Please launch this app directly inside your GHL dashboard.");
                 return;
             }
 
@@ -352,9 +364,9 @@
             document.getElementById('period').value = val;
             document.querySelectorAll('.period-btn').forEach(btn => {
                 if (btn.getAttribute('data-val') === val) {
-                    btn.className = "period-btn flex-1 py-1 text-xs rounded-md bg-accent text-white font-medium";
+                    btn.className = "period-btn flex-1 py-1 text-xs rounded-md bg-accent text-white font-medium transition-all";
                 } else {
-                    btn.className = "period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white";
+                    btn.className = "period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white transition-all";
                 }
             });
         }
@@ -388,6 +400,16 @@
             }
         }
 
+        function formatNum(num) {
+            if (!num || num === 'N/A') return 'N/A';
+            const n = parseInt(num);
+            if (isNaN(n)) return num;
+            if (n >= 1000000000) return (n / 1000000000).toFixed(1) + 'B';
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+            return n.toLocaleString();
+        }
+
         async function executeEngine() {
             const searchBtn = document.getElementById('searchBtn');
             const resultsGrid = document.getElementById('resultsGrid');
@@ -408,7 +430,7 @@
             }
 
             searchBtn.disabled = true;
-            searchBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>SCANNING TIKTOK...</span>`;
+            searchBtn.innerHTML = `<i class="fas fa-spinner fa-spin text-xs"></i> <span>SCANNING...</span>`;
             
             emptyState.classList.add('hidden');
             resultsGrid.classList.add('hidden');
@@ -434,8 +456,8 @@
 
                 const usageBanner = document.getElementById('usageBanner');
                 const usageText = document.getElementById('usageText');
-                usageBanner.classList.remove('hidden');
-                usageText.innerText = `${result.requests_used} / ${result.max_requests_allowed} Requests`;
+                if (usageBanner) usageBanner.classList.remove('hidden');
+                if (usageText) usageText.innerText = `${result.requests_used || 1} / ${result.max_requests_allowed || tierInfo.maxRequests} Requests`;
 
                 document.getElementById('codeContent').textContent = JSON.stringify(result, null, 2);
                 toggleViewBtn.classList.remove('hidden');
@@ -451,7 +473,7 @@
                     resultsGrid.classList.remove('hidden');
                 }
                 searchBtn.disabled = false;
-                searchBtn.innerHTML = `<i class="fas fa-search text-[11px]"></i> <span>FETCH VIRAL TRENDS</span>`;
+                searchBtn.innerHTML = `<i class="fas fa-bolt text-[11px]"></i> <span>FETCH VIRAL TRENDS</span>`;
             }
         }
 
@@ -460,70 +482,127 @@
             resultsGrid.innerHTML = '';
 
             if (!items || items.length === 0) {
-                resultsGrid.innerHTML = `<div class="col-span-full text-center py-12 text-zinc-500 font-mono text-xs">No trend data found for the selected filters.</div>`;
+                resultsGrid.innerHTML = `<div class="col-span-full text-center py-12 text-zinc-500 font-mono text-xs">No viral trend metrics harvested for this filter selection.</div>`;
                 return;
             }
 
-            items.forEach(item => {
+            items.forEach((item, index) => {
                 const card = document.createElement('div');
-                card.className = "bg-bgPanel border border-borderMain hover:border-accent/40 transition-all rounded-xl p-5 shadow-lg flex flex-col justify-between space-y-4";
+                card.className = "bg-bgPanel border border-borderMain hover:border-accent/50 transition-all rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-5 relative overflow-hidden group";
 
                 if (type === 'hashtags') {
-                    const hashtagName = item.hashtag_name || item.name || 'hashtag';
-                    const views = item.views || item.video_views || 'N/A';
-                    const publishCnt = item.publish_cnt || 'N/A';
+                    const rank = item.Rank || (index + 1);
+                    const hashtagName = item.Hashtag || item.hashtag_name || item.name || 'hashtag';
+                    const views = formatNum(item["Video Views"] || item.views || item.video_views);
+                    const posts = formatNum(item.Posts || item.publish_cnt);
+                    const tiktokUrl = item["TikTok URL"] || `https://www.tiktok.com/tag/${hashtagName.replace('#', '')}`;
+                    const creators = item["Top Creators"] || [];
+
+                    let creatorsHtml = '';
+                    if (creators && creators.length > 0) {
+                        creatorsHtml = `
+                            <div class="pt-3 border-t border-borderMain/60 space-y-2">
+                                <p class="text-[10px] font-mono uppercase text-zinc-500 tracking-wider flex items-center justify-between">
+                                    <span>Top Creators</span>
+                                    <i class="fas fa-fire text-amber-500 text-[10px]"></i>
+                                </p>
+                                <div class="space-y-1.5">
+                                    ${creators.slice(0, 2).map(c => `
+                                        <div class="flex items-center justify-between text-xs bg-bgMain p-2 rounded-lg border border-borderMain/40">
+                                            <div class="flex items-center gap-2 truncate">
+                                                <div class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                    ${c.nickname ? c.nickname.charAt(0) : '@'}
+                                                </div>
+                                                <span class="text-zinc-200 font-medium truncate">${c.nickname || c.handle}</span>
+                                            </div>
+                                            <span class="text-[10px] font-mono text-zinc-400 shrink-0">${formatNum(c.followers)} fans</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
 
                     card.innerHTML = `
-                        <div>
-                            <div class="flex justify-between items-center mb-3">
-                                <h4 class="font-bold text-base text-accent flex items-center gap-1">
-                                    <span class="text-zinc-500 font-normal">#</span>${hashtagName}
-                                </h4>
-                                <span class="text-[10px] uppercase font-mono bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 rounded">Hashtag</span>
-                            </div>
-                            <div class="space-y-2 text-xs font-mono">
-                                <div class="flex justify-between border-b border-borderMain/50 pb-2">
-                                    <span class="text-zinc-400">Total Views:</span>
-                                    <strong class="text-white">${views}</strong>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-start gap-2">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 text-accent font-mono text-xs font-bold flex items-center justify-center">
+                                        #${rank}
+                                    </span>
+                                    <h4 class="font-bold text-base text-white tracking-tight group-hover:text-accent transition-colors truncate">
+                                        ${hashtagName.startsWith('#') ? hashtagName : '#' + hashtagName}
+                                    </h4>
                                 </div>
-                                <div class="flex justify-between pt-1">
-                                    <span class="text-zinc-400">Published Videos:</span>
-                                    <span class="text-zinc-300">${publishCnt}</span>
+                                <span class="text-[9px] uppercase font-mono font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full shrink-0">
+                                    Hashtag
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 bg-bgMain p-3 rounded-xl border border-borderMain/50">
+                                <div>
+                                    <p class="text-[10px] font-mono text-zinc-500 uppercase">Video Views</p>
+                                    <p class="text-sm font-bold font-mono text-white mt-0.5">${views}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-mono text-zinc-500 uppercase">Total Posts</p>
+                                    <p class="text-sm font-bold font-mono text-zinc-300 mt-0.5">${posts}</p>
                                 </div>
                             </div>
+
+                            ${creatorsHtml}
+                        </div>
+
+                        <div class="pt-3 border-t border-borderMain/50 flex justify-between items-center">
+                            <a href="${tiktokUrl}" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-accent font-semibold hover:underline">
+                                <span>Inspect on TikTok</span>
+                                <i class="fas fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                            <span class="text-[10px] font-mono text-green-400 flex items-center gap-1">
+                                <i class="fas fa-arrow-trend-up"></i> Live
+                            </span>
                         </div>
                     `;
                 } else {
-                    const videoTitle = item.title || item.item_from || 'TikTok Video';
-                    const views = item.play_count || item.views || 'N/A';
-                    const likes = item.digg_count || item.likes || 'N/A';
-                    const videoUrl = item.play_url || item.item_url;
+                    const videoTitle = item.title || item.item_from || 'Viral TikTok Content';
+                    const views = formatNum(item.play_count || item.views);
+                    const likes = formatNum(item.digg_count || item.likes);
+                    const shares = formatNum(item.share_count || item.shares);
+                    const videoUrl = item.play_url || item.item_url || '#';
 
                     card.innerHTML = `
-                        <div>
-                            <div class="flex justify-between items-start mb-3 gap-2">
-                                <h4 class="font-medium text-xs text-zinc-200 line-clamp-2 leading-relaxed">${videoTitle}</h4>
-                                <span class="text-[10px] uppercase font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded shrink-0">Video</span>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-medium text-xs text-zinc-200 line-clamp-2 leading-relaxed">
+                                    ${videoTitle}
+                                </h4>
+                                <span class="text-[9px] uppercase font-mono font-bold bg-pink-500/10 text-pink-400 border border-pink-500/20 px-2 py-0.5 rounded-full shrink-0">
+                                    Video
+                                </span>
                             </div>
-                            <div class="space-y-2 text-xs font-mono">
-                                <div class="flex justify-between border-b border-borderMain/50 pb-2">
-                                    <span class="text-zinc-400">Views:</span>
-                                    <strong class="text-white">${views}</strong>
+
+                            <div class="grid grid-cols-3 gap-2 bg-bgMain p-3 rounded-xl border border-borderMain/50 font-mono text-center">
+                                <div>
+                                    <p class="text-[9px] text-zinc-500 uppercase">Views</p>
+                                    <p class="text-xs font-bold text-white mt-0.5">${views}</p>
                                 </div>
-                                <div class="flex justify-between pt-1">
-                                    <span class="text-zinc-400">Likes:</span>
-                                    <span class="text-zinc-300">${likes}</span>
+                                <div>
+                                    <p class="text-[9px] text-zinc-500 uppercase">Likes</p>
+                                    <p class="text-xs font-bold text-zinc-300 mt-0.5">${likes}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] text-zinc-500 uppercase">Shares</p>
+                                    <p class="text-xs font-bold text-zinc-300 mt-0.5">${shares}</p>
                                 </div>
                             </div>
                         </div>
-                        ${videoUrl ? `
-                            <div class="pt-3 border-t border-borderMain/50">
-                                <a href="${videoUrl}" target="_blank" class="inline-flex items-center gap-1 text-xs text-accent font-semibold hover:underline">
-                                    <span>Watch on TikTok</span>
-                                    <i class="fas fa-external-link-alt text-[10px]"></i>
-                                </a>
-                            </div>
-                        ` : ''}
+
+                        <div class="pt-3 border-t border-borderMain/50 flex justify-between items-center">
+                            <a href="${videoUrl}" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-accent font-semibold hover:underline">
+                                <span>Watch Video</span>
+                                <i class="fas fa-play text-[9px]"></i>
+                            </a>
+                        </div>
                     `;
                 }
                 resultsGrid.appendChild(card);
