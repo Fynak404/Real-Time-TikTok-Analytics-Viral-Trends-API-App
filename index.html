@@ -39,7 +39,7 @@
 </head>
 <body class="flex h-screen overflow-hidden antialiased selection:bg-accent selection:text-white">
 
-    <!-- BLOCK/ACCESS DENIED SCREEN (Triggered if opened outside GHL or without valid location_id) -->
+    <!-- BLOCK/ACCESS DENIED SCREEN -->
     <div id="accessDeniedScreen" class="hidden fixed inset-0 bg-bgMain z-50 flex items-center justify-center p-6 text-center">
         <div class="bg-bgPanel border border-red-500/30 max-w-md w-full p-8 rounded-2xl shadow-2xl relative overflow-hidden space-y-5">
             <div class="w-16 h-16 bg-red-500/10 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-red-500/20">
@@ -99,7 +99,7 @@
                     <!-- TREND TYPE -->
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Trend Type</label>
-                        <select id="trendType" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-accent">
+                        <select id="trendType" onchange="updateCountryDropdown()" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-accent">
                             <option value="hashtags">Hashtags</option>
                             <option value="videos">Top Videos</option>
                         </select>
@@ -109,32 +109,7 @@
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Country</label>
                         <select id="countrySelect" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 font-mono focus:outline-none focus:border-accent">
-                            <option value="US">United States (US)</option>
-                            <option value="NL">Netherlands (NL)</option>
-                            <option value="DE">Germany (DE)</option>
-                            <option value="GB">United Kingdom (GB)</option>
-                            <option value="FR">France (FR)</option>
-                            <option value="ES">Spain (ES)</option>
-                            <option value="BE">Belgium (BE)</option>
-                            <option value="IT">Italy (IT)</option>
-                            <option value="CA">Canada (CA)</option>
-                            <option value="AU">Australia (AU)</option>
-                            <option value="AT">Austria (AT)</option>
-                            <option value="CH">Switzerland (CH)</option>
-                            <option value="SE">Sweden (SE)</option>
-                            <option value="NO">Norway (NO)</option>
-                            <option value="DK">Denmark (DK)</option>
-                            <option value="FI">Finland (FI)</option>
-                            <option value="PL">Poland (PL)</option>
-                            <option value="PT">Portugal (PT)</option>
-                            <option value="BR">Brazil (BR)</option>
-                            <option value="MX">Mexico (MX)</option>
-                            <option value="JP">Japan (JP)</option>
-                            <option value="KR">South Korea (KR)</option>
-                            <option value="ID">Indonesia (ID)</option>
-                            <option value="TR">Turkey (TR)</option>
-                            <option value="AE">United Arab Emirates (AE)</option>
-                            <option value="SA">Saudi Arabia (SA)</option>
+                            <!-- Ingevuld via JS op basis van Trend Type -->
                         </select>
                     </div>
 
@@ -241,45 +216,99 @@
         </div>
     </div>
 
-    <!-- LOGIC SCRIPT (UNCHANGED BACKEND & GHL VERIFICATION LOGIC) -->
+    <!-- LOGIC SCRIPT -->
     <script>
-        // =================================================================
-        // CONFIGURATION & RENDER BACKEND URL
-        // =================================================================
         const RENDER_BACKEND_URL = "https://jnx-tiktok-api.onrender.com/api/v1/tiktok/ghl-trends";
-        
-        // 🔴 PASTE YOUR UPGRADE URL HERE FOR CLIENTS
-        const UPGRADE_URL = ""; // e.g. "https://your-gohighlevel-checkout-link.com"
+        const UPGRADE_URL = ""; 
 
         let currentGhlLocationId = null;
         let currentGhlUserTier = null;
-        let currentView = 'clean'; // 'clean' or 'code'
+        let currentView = 'clean';
 
-        // =================================================================
+        // -----------------------------------------------------------------
+        // COUNTRY ALLOWLISTS MATCHING FASTAPI BACKEND
+        // -----------------------------------------------------------------
+        const hashtagCountries = [
+            { code: "US", name: "United States (US)" },
+            { code: "FR", name: "France (FR)" },
+            { code: "DE", name: "Germany (DE)" },
+            { code: "IT", name: "Italy (IT)" },
+            { code: "ES", name: "Spain (ES)" },
+            { code: "GB", name: "United Kingdom (GB)" },
+            { code: "AR", name: "Argentina (AR)" },
+            { code: "AU", name: "Australia (AU)" },
+            { code: "BR", name: "Brazil (BR)" },
+            { code: "CA", name: "Canada (CA)" },
+            { code: "CO", name: "Colombia (CO)" },
+            { code: "EG", name: "Egypt (EG)" },
+            { code: "ID", name: "Indonesia (ID)" },
+            { code: "IL", name: "Israel (IL)" },
+            { code: "JP", name: "Japan (JP)" },
+            { code: "KR", name: "South Korea (KR)" },
+            { code: "MY", name: "Malaysia (MY)" },
+            { code: "MX", name: "Mexico (MX)" },
+            { code: "PH", name: "Philippines (PH)" },
+            { code: "SA", name: "Saudi Arabia (SA)" },
+            { code: "SG", name: "Singapore (SG)" },
+            { code: "ZA", name: "South Africa (ZA)" },
+            { code: "TW", name: "Taiwan (TW)" },
+            { code: "TH", name: "Thailand (TH)" },
+            { code: "TR", name: "Turkey (TR)" },
+            { code: "AE", name: "United Arab Emirates (AE)" },
+            { code: "VN", name: "Vietnam (VN)" }
+        ];
+
+        const videoCountries = [
+            { code: "US", name: "United States (US)" },
+            { code: "JP", name: "Japan (JP)" },
+            { code: "VN", name: "Vietnam (VN)" },
+            { code: "TH", name: "Thailand (TH)" },
+            { code: "ID", name: "Indonesia (ID)" }
+        ];
+
+        function updateCountryDropdown() {
+            const trendType = document.getElementById('trendType').value;
+            const countrySelect = document.getElementById('countrySelect');
+            const targetList = (trendType === 'videos') ? videoCountries : hashtagCountries;
+
+            const previousValue = countrySelect.value;
+            countrySelect.innerHTML = '';
+
+            targetList.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.code;
+                opt.textContent = item.name;
+                countrySelect.appendChild(opt);
+            });
+
+            if (targetList.some(item => item.code === previousValue)) {
+                countrySelect.value = previousValue;
+            } else {
+                countrySelect.value = targetList[0].code;
+            }
+        }
+
+        // -----------------------------------------------------------------
         // AUTOMATIC LOGIN CHECK ON PAGE LOAD
-        // =================================================================
+        // -----------------------------------------------------------------
         window.addEventListener('DOMContentLoaded', () => {
-            // Set upgrade link targets
             document.getElementById('accessDeniedUpgradeBtn').href = UPGRADE_URL || "#";
             document.getElementById('paywallUpgradeBtn').href = UPGRADE_URL || "#";
 
-            // Extract query parameters passed by GoHighLevel iframe
+            updateCountryDropdown(); // Populate dropdown initial state
+
             const urlParams = new URLSearchParams(window.location.search);
-            
             currentGhlLocationId = urlParams.get('location_id') || urlParams.get('locationId') || window.ghlLocationId;
             currentGhlUserTier = (urlParams.get('tier') || urlParams.get('plan') || window.ghlUserPlan || "BASIC").toUpperCase();
 
-            // SECURITY CHECK: Ensure user opens app within GoHighLevel with a valid Location ID
             if (!currentGhlLocationId || currentGhlLocationId === "UNKNOWN") {
                 showAccessDenied("No valid GoHighLevel session detected. Please launch this app directly from inside your GHL account.");
                 return;
             }
 
-            // Valid Session! Launch Dashboard
             document.getElementById('accessDeniedScreen').classList.add('hidden');
             document.getElementById('dashboardApp').classList.remove('hidden');
             
-            // Update Tier Badge in UI
             const tierBadge = document.getElementById('tierBadge');
             if (tierBadge) tierBadge.innerText = currentGhlUserTier;
         });
@@ -290,7 +319,6 @@
             document.getElementById('accessDeniedReason').innerText = reason;
         }
 
-        // UI Helpers
         function setPeriod(val) {
             document.getElementById('period').value = val;
             document.querySelectorAll('.period-btn').forEach(btn => {
@@ -324,9 +352,9 @@
             }
         }
 
-        // =================================================================
-        // FETCH DATA FROM PYTHON RENDER BACKEND
-        // =================================================================
+        // -----------------------------------------------------------------
+        // FETCH DATA FROM RENDER BACKEND
+        // -----------------------------------------------------------------
         async function executeEngine() {
             const searchBtn = document.getElementById('searchBtn');
             const resultsGrid = document.getElementById('resultsGrid');
@@ -339,7 +367,6 @@
             const period = document.getElementById('period').value;
             const limit = document.getElementById('limit').value;
 
-            // Set UI Loading state
             searchBtn.disabled = true;
             searchBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>SCANNING TIKTOK...</span>`;
             
@@ -347,13 +374,11 @@
             resultsGrid.classList.add('hidden');
             loadingState.classList.remove('hidden');
 
-            // Build request URL targeting FastAPI Render Backend
             const requestUrl = `${RENDER_BACKEND_URL}?location_id=${encodeURIComponent(currentGhlLocationId)}&plan_id=${encodeURIComponent(currentGhlUserTier)}&country=${country}&trend_type=${trendType}&period=${period}&limit=${limit}`;
 
             try {
                 const response = await fetch(requestUrl);
 
-                // 🛑 1. PAYWALL TRIGGER: Status 429 = Monthly limit reached
                 if (response.status === 429) {
                     const errorData = await response.json();
                     showPaywall(errorData.detail);
@@ -367,17 +392,14 @@
 
                 const result = await response.json();
 
-                // 2. Update Usage Banner
                 const usageBanner = document.getElementById('usageBanner');
                 const usageText = document.getElementById('usageText');
                 usageBanner.classList.remove('hidden');
                 usageText.innerText = `${result.requests_used} / ${result.max_requests_allowed} Requests`;
 
-                // 3. Populate Pure Code Output
                 document.getElementById('codeContent').textContent = JSON.stringify(result, null, 2);
                 toggleViewBtn.classList.remove('hidden');
 
-                // 4. Render Visual Cards
                 renderResults(result.data, trendType);
 
             } catch (error) {
@@ -393,9 +415,9 @@
             }
         }
 
-        // =================================================================
-        // RENDER TREND RESULTS TO UI
-        // =================================================================
+        // -----------------------------------------------------------------
+        // RENDER RESULTS
+        // -----------------------------------------------------------------
         function renderResults(items, type) {
             const resultsGrid = document.getElementById('resultsGrid');
             resultsGrid.innerHTML = '';
@@ -472,9 +494,6 @@
             });
         }
 
-        // =================================================================
-        // PAYWALL MODAL LOGIC
-        // =================================================================
         function showPaywall(msg) {
             if (msg) document.getElementById('paywallMessage').innerText = msg;
             document.getElementById('paywallModal').classList.remove('hidden');
