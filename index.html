@@ -1,398 +1,247 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JNX Global | TikTok Analytics (GHL Native)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['ui-monospace', 'SFMono-Regular', 'monospace']
-                    },
-                    colors: {
-                        bgMain: '#09090b',
-                        bgPanel: '#121216',
-                        borderMain: '#27272a',
-                        accent: '#6366f1',
-                        accentHover: '#4f46e5'
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { background-color: #09090b; color: #f4f4f5; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #09090b; }
-        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
-    </style>
-</head>
-<body class="flex h-screen overflow-hidden antialiased selection:bg-accent selection:text-white">
+import os
+from datetime import timedelta
+from fastapi import FastAPI, HTTPException, Header, Query
+from typing import Optional
+from apify_client import ApifyClient
 
-    <!-- GHL GATEKEEPER (Voorkomt toegang buiten GHL) -->
-    <div id="ghlStrictGate" class="fixed inset-0 z-[100] bg-bgMain flex flex-col items-center justify-center p-4 transition-opacity duration-500">
-        <div class="bg-bgPanel border border-borderMain rounded-2xl max-w-sm w-full p-8 shadow-2xl flex flex-col items-center text-center space-y-6 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-accent to-purple-500"></div>
-            <div class="w-16 h-16 rounded-2xl bg-bgMain border border-borderMain flex items-center justify-center shadow-inner">
-                <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
-            </div>
-            <div>
-                <h2 class="text-xl font-bold text-white tracking-tight">GHL Authentication</h2>
-                <p class="text-xs text-zinc-400 mt-2">Connecting to Workspace...</p>
-            </div>
-            <div id="ghlGateLoader" class="w-full space-y-2">
-                <div class="w-full h-1.5 bg-bgMain rounded-full overflow-hidden border border-borderMain">
-                    <div id="ghlGateProgress" class="h-full bg-accent transition-all duration-300" style="width: 0%"></div>
-                </div>
-                <p id="ghlGateStatus" class="text-[10px] font-mono text-zinc-500">Authenticating iframe parameters...</p>
-            </div>
-        </div>
-    </div>
+app = FastAPI(title="JNX Global: Live TikTok Viral Analytics API")
 
-    <!-- UPGRADE / PAYWALL MODAL (Wordt getriggerd door de backend) -->
-    <div id="upgradeModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-bgPanel border border-borderMain rounded-2xl max-w-md w-full p-8 shadow-2xl flex flex-col items-center text-center relative overflow-hidden transform scale-95 transition-transform duration-300" id="upgradeBox">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-orange-500"></div>
+# 🔴 ENKEL JOUW ECHTE TOKEN HIER INVOEREN
+APIFY_TOKEN = "apify_api_my prive code here..."
+
+apify_client = ApifyClient(APIFY_TOKEN)
+TIKTOK_ACTOR_ID = "data_xplorer/tiktok-trends"
+
+def fetch_trends_from_apify(country: str, limit: int, trend_type: str, period: str):
+    """Start de actor synchroon met de exacte JSON-velden die data_xplorer vereist"""
+    exact_limit = int(limit)
+    target_country = str(country).upper().strip()
+    trend_type_clean = trend_type.lower().strip()
+
+    # 🚀 DE ULTIEME APIDATA FIX: We bouwen de payload op basis van de exacte data_xplorer documentatie
+    run_input = {
+        "trendType": trend_type_clean,
+        "maxItems": exact_limit
+    }
+
+    if trend_type_clean == "videos":
+        run_input["videoCountry"] = target_country
+        run_input["videoPeriod"] = str(period)
+    else:
+        run_input["countryCode"] = target_country
+        run_input["hashtagPeriod"] = str(period)
+
+    try:
+        actor_call = apify_client.actor(TIKTOK_ACTOR_ID).call(
+            run_input=run_input, 
+            wait_duration=timedelta(seconds=60)
+        )
+        
+        if not actor_call:
+            raise HTTPException(status_code=500, detail="Apify Actor did not return a valid run object.")
             
-            <div class="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4 border border-yellow-500/20">
-                <svg class="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-            </div>
-            
-            <h2 class="text-2xl font-bold text-white mb-2">Usage Limit Reached</h2>
-            <p class="text-sm text-zinc-400 mb-6">Your current plan has reached its monthly search limit. Upgrade to unlock more analytics and higher return limits.</p>
-            
-            <div class="w-full bg-bgMain rounded-lg p-4 mb-6 border border-borderMain text-left">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Current Plan</span>
-                    <span id="modalCurrentPlan" class="text-xs font-bold text-white bg-borderMain px-2 py-1 rounded">BASIC</span>
-                </div>
-                <div class="w-full bg-borderMain rounded-full h-1.5 mb-2">
-                    <div class="bg-yellow-500 h-1.5 rounded-full w-full"></div>
-                </div>
-                <p class="text-[10px] font-mono text-zinc-500">100% of monthly quota used.</p>
-            </div>
+        if isinstance(actor_call, dict):
+            dataset_id = actor_call.get("defaultDatasetId") or actor_call.get("default_dataset_id")
+        else:
+            dataset_id = getattr(actor_call, "default_dataset_id", None) or getattr(actor_call, "defaultDatasetId", None)
 
-            <button onclick="window.open('https://jouw-upgrade-link.com', '_blank')" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold py-3 rounded-lg transition-all shadow-[0_0_20px_rgba(234,179,8,0.3)]">
-                Upgrade Plan Now
-            </button>
-            <button onclick="closeUpgradeModal()" class="mt-4 text-xs text-zinc-500 hover:text-white transition-colors">Dismiss</button>
-        </div>
-    </div>
+        if not dataset_id:
+            raise HTTPException(status_code=500, detail="Could not extract dataset ID from Apify run.")
 
-    <!-- LEFT NAVIGATION SIDEBAR -->
-    <aside class="w-72 bg-bgPanel border-r border-borderMain flex flex-col z-10 shrink-0">
-        <div class="p-5 border-b border-borderMain">
-            <h1 class="text-base font-semibold tracking-tight text-white flex items-center gap-2">
-                <span id="headerStatusDot" class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-                JNX Analytics
-            </h1>
-            <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-0.5">GHL Native Engine</p>
-        </div>
+        dataset_items_list = apify_client.dataset(dataset_id).list_items().items
 
-        <div class="flex-1 overflow-y-auto p-5 space-y-5">
-            <!-- GHL Identity Display -->
-            <div class="bg-bgMain border border-borderMain rounded-lg p-3 flex flex-col gap-2">
-                <div class="flex justify-between items-center">
-                    <span class="text-[9px] text-zinc-500 uppercase font-semibold">Location ID</span>
-                    <span id="displayLocationId" class="text-[10px] font-mono text-accent truncate max-w-[120px]">Detecting...</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-[9px] text-zinc-500 uppercase font-semibold">Active Plan</span>
-                    <span id="displayPlan" class="text-[10px] font-bold text-white bg-borderMain px-2 py-0.5 rounded">BASIC</span>
-                </div>
-            </div>
+        if not dataset_items_list:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"No trend data returned from TikTok for region {target_country} and type {trend_type_clean}."
+            )
 
-            <div class="space-y-1.5">
-                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Trend Type</label>
-                <select id="trendType" onchange="handleTypeChange()" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-accent">
-                    <option value="hashtags">Global Hashtags</option>
-                    <option value="videos">Top Viral Videos</option>
-                </select>
-            </div>
+        return dataset_items_list[:exact_limit]
 
-            <div class="space-y-1.5">
-                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Country Code</label>
-                <select id="countrySelect" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 font-mono focus:outline-none focus:border-accent"></select>
-            </div>
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Apify Integration Error: {str(e)}")
 
-            <div class="space-y-1.5">
-                <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Period (Days)</label>
-                <div class="flex bg-bgMain border border-borderMain rounded-lg p-1 gap-1">
-                    <button type="button" onclick="setPeriod('7')" class="period-btn flex-1 py-1 text-xs rounded-md bg-borderMain text-white font-medium" data-val="7">7</button>
-                    <button type="button" onclick="setPeriod('30')" class="period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white" data-val="30">30</button>
-                    <button type="button" onclick="setPeriod('90')" id="period90" class="period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white" data-val="90">90</button>
-                </div>
-                <input type="hidden" id="period" value="7">
-            </div>
 
-            <div class="space-y-2 pt-1">
-                <div class="flex justify-between items-center">
-                    <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Return Limit</label>
-                    <span id="limitValue" class="text-xs font-mono text-accent bg-accent/10 px-2 py-0.5 rounded-md">5</span>
-                </div>
-                <input type="range" id="limit" min="1" max="50" value="5" class="w-full h-1 bg-borderMain rounded-lg appearance-none cursor-pointer accent-accent" oninput="onLimitSliderChange(this.value)">
-            </div>
-        </div>
+# =====================================================================
+# SCRIPT 1: RAPIDAPI ENDPOINT
+# =====================================================================
+@app.get("/api/v1/tiktok/trends")
+def get_tiktok_trends(
+    country: str = "US", 
+    limit: int = Query(default=5, ge=1),
+    trend_type: str = Query(default="hashtags", description="Options: hashtags, videos"),
+    period: str = Query(default="7", description="Options for hashtags: 7, 30, 90. For videos: 7, 30"),
+    x_rapidapi_subscription: Optional[str] = Header(None, alias="X-RapidAPI-Subscription")
+):
+    country = country.upper().strip()
+    trend_type = trend_type.lower()
+    
+    if trend_type not in ["hashtags", "videos"]:
+        raise HTTPException(status_code=400, detail="Invalid trend_type. Choose 'hashtags' or 'videos'.")
 
-        <div class="p-5 border-t border-borderMain">
-            <button id="executeBtn" onclick="executeEngine()" class="w-full bg-accent hover:bg-accentHover text-white text-xs font-semibold py-3 rounded-lg transition-all flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                <span>Execute Fetch</span>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-            </button>
-        </div>
-    </aside>
+    if trend_type == "videos":
+        allowed_countries = ["US", "JP", "VN", "TH", "ID"]
+        if country not in allowed_countries:
+            raise HTTPException(status_code=400, detail=f"For top videos, only these countries are supported: {allowed_countries}")
+    else:
+        allowed_countries = ["US", "FR", "DE", "IT", "ES", "GB", "AR", "AU", "BR", "CA", "CO", "EG", "ID", "IL", "JP", "KR", "MY", "MX", "PH", "SA", "SG", "ZA", "TW", "TH", "TR", "AE", "VN"]
+        if country not in allowed_countries:
+            raise HTTPException(status_code=400, detail=f"Country '{country}' is not supported for hashtags.")
 
-    <!-- MAIN WORKSPACE -->
-    <main class="flex-1 flex flex-col bg-bgMain">
-        <header class="h-14 border-b border-borderMain flex items-center justify-between px-6 bg-bgMain">
-            <div class="flex items-center gap-2 text-xs text-zinc-400">
-                <span id="statusIndicator" class="w-2 h-2 rounded-full bg-green-500"></span>
-                <span id="statusText">GoHighLevel Secure Connection</span>
-            </div>
-        </header>
+    tier = x_rapidapi_subscription.upper() if x_rapidapi_subscription else "BASIC"
+    if "PRO" in tier or "STANDARD" in tier: max_allowed = 25
+    elif "ULTRA" in tier: max_allowed = 50
+    elif "MEGA" in tier or "ENTERPRISE" in tier: max_allowed = 150
+    elif "TEST" in tier or "CUSTOM" in tier: max_allowed = 100  
+    else: max_allowed = 5
 
-        <div class="flex-1 p-6 overflow-y-auto relative">
-            <div id="stateEmpty" class="h-full flex flex-col items-center justify-center text-center">
-                <svg class="w-12 h-12 text-borderMain mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                <h2 class="text-sm font-medium text-zinc-300">Ready for Live Request</h2>
-                <p class="text-xs text-zinc-500 mt-1 max-w-xs">Press "Execute Fetch" to query via your secure backend.</p>
-            </div>
+    if limit > max_allowed:
+        limit = max_allowed
 
-            <div id="stateLoading" class="hidden h-full flex flex-col items-center justify-center">
-                <div class="w-80">
-                    <div class="flex justify-between text-[10px] font-mono text-zinc-400 mb-1.5">
-                        <span>BACKEND_SYNC</span>
-                        <span id="loadPercent" class="text-accent font-bold">0%</span>
-                    </div>
-                    <div class="w-full h-1.5 bg-borderMain rounded-full overflow-hidden">
-                        <div id="loadBar" class="h-full bg-accent transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                    <div id="loadStep" class="mt-3 text-xs font-mono text-zinc-400 text-center animate-pulse">Checking location limits...</div>
-                </div>
-            </div>
+    data = fetch_trends_from_apify(country, limit, trend_type, period)
+    
+    return {
+        "status": "success", 
+        "message": "RapidAPI data retrieved successfully", 
+        "tier": tier, 
+        "limit_applied": limit,
+        "data": data
+    }
 
-            <div id="stateClean" class="hidden space-y-4 max-w-5xl mx-auto pb-8"></div>
-        </div>
-    </main>
 
-    <script>
-        // JOUW RENDER BACKEND URL (Hier wordt alles veilig afgehandeld)
-        const BACKEND_API_URL = 'https://jouw-render-app.onrender.com/api/fetch-trends';
+# =====================================================================
+# SCRIPT 2: ONDERSTEUNING VOOR API.MARKET
+# =====================================================================
+@app.get("/api/v1/tiktok/agent-trends")
+def get_tiktok_trends_for_agent(
+    country: str = "US",
+    limit: int = Query(default=5, ge=1),
+    trend_type: str = "hashtags",
+    period: str = "7",
+    x_user_plan: Optional[str] = Header(None, alias="X-User-Plan")
+):
+    country = country.upper().strip()
+    trend_type = trend_type.lower()
+    
+    if trend_type not in ["hashtags", "videos"]:
+        raise HTTPException(status_code=400, detail="Invalid trend_type. Choose 'hashtags' or 'videos'.")
+    
+    if trend_type == "videos":
+        allowed_countries = ["US", "JP", "VN", "TH", "ID"]
+        if country not in allowed_countries:
+            raise HTTPException(status_code=400, detail=f"For top videos, only these countries are supported: {allowed_countries}")
+    else:
+        allowed_countries = ["US", "FR", "DE", "IT", "ES", "GB", "AR", "AU", "BR", "CA", "CO", "EG", "ID", "IL", "JP", "KR", "MY", "MX", "PH", "SA", "SG", "ZA", "TW", "TH", "TR", "AE", "VN"]
+        if country not in allowed_countries:
+            raise HTTPException(status_code=400, detail=f"Country '{country}' is not supported for hashtags.")
 
-        const HASHTAG_COUNTRIES = ["US", "FR", "DE", "IT", "ES", "GB", "NL", "AU", "CA"];
-        const VIDEO_COUNTRIES = ["US", "JP", "VN", "TH", "ID"];
+    tier = x_user_plan.upper() if x_user_plan else "BASIC"
+    if "PRO" in tier or "STANDARD" in tier: max_allowed = 25
+    elif "ULTRA" in tier: max_allowed = 50
+    elif "MEGA" in tier or "ENTERPRISE" in tier: max_allowed = 150
+    elif "TEST" in tier or "CUSTOM" in tier: max_allowed = 100
+    else: max_allowed = 5
 
-        let ghlLocationId = "UNKNOWN";
-        let ghlPlanId = "BASIC";
-        let currentPeriod = '7';
+    if limit > max_allowed:
+        limit = max_allowed
 
-        // --- 1. GHL SECURE INITIALIZATION ---
-        window.onload = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const locId = urlParams.get('location_id') || urlParams.get('locationId');
-            const plan = urlParams.get('plan_id') || 'BASIC';
+    data = fetch_trends_from_apify(country, limit, trend_type, period)
+    
+    return {
+        "status": "success", 
+        "message": "API.market data direct via Apify", 
+        "tier": tier, 
+        "limit_applied": limit, 
+        "data": data
+    }
 
-            const progress = document.getElementById('ghlGateProgress');
-            const status = document.getElementById('ghlGateStatus');
 
-            setTimeout(() => { progress.style.width = '50%'; status.innerText = 'Validating Location ID...'; }, 400);
+# =====================================================================
+# SCRIPT 3: NATIVE GOHIGHLEVEL APP ENDPOINT (EXACTE TIER LOGICA)
+# =====================================================================
+GHL_USAGE_TRACKER = {}
 
-            setTimeout(() => {
-                if (locId) {
-                    // Legit GHL Iframe Access
-                    ghlLocationId = locId;
-                    ghlPlanId = plan;
-                    
-                    document.getElementById('displayLocationId').innerText = ghlLocationId;
-                    document.getElementById('displayPlan').innerText = ghlPlanId;
-                    document.getElementById('modalCurrentPlan').innerText = ghlPlanId;
+@app.get("/api/v1/tiktok/ghl-trends")
+def get_tiktok_trends_for_ghl(
+    location_id: str = Query(..., description="GoHighLevel Sub-Account Location ID"),
+    plan_id: str = Query(default="BASIC", description="GoHighLevel Marketplace Plan ID or Tier Name"),
+    country: str = "US",
+    limit: int = Query(default=5, ge=1),
+    trend_type: str = "hashtags",
+    period: str = "7"
+):
+    country = country.upper().strip()
+    trend_type = trend_type.lower()
+    plan_tier = plan_id.upper().strip()
+    
+    if not location_id or location_id == "UNKNOWN":
+        raise HTTPException(status_code=400, detail="Valid GoHighLevel location_id is required.")
 
-                    progress.style.width = '100%';
-                    status.innerText = 'Secure Connection Established!';
-                    status.classList.replace('text-zinc-500', 'text-green-400');
+    if trend_type not in ["hashtags", "videos"]:
+        raise HTTPException(status_code=400, detail="Invalid trend_type. Choose 'hashtags' or 'videos'.")
+    
+    if trend_type == "videos":
+        allowed_countries = ["US", "JP", "VN", "TH", "ID"]
+        if country not in allowed_countries:
+            raise HTTPException(status_code=400, detail=f"For top videos, only these countries are supported: {allowed_countries}")
+    else:
+        allowed_countries = ["US", "FR", "DE", "IT", "ES", "GB", "AR", "AU", "BR", "CA", "CO", "EG", "ID", "IL", "JP", "KR", "MY", "MX", "PH", "SA", "SG", "ZA", "TW", "TH", "TR", "AE", "VN"]
+        if country not in allowed_countries:
+            raise HTTPException(status_code=400, detail=f"Country '{country}' is not supported for hashtags.")
 
-                    setTimeout(() => {
-                        document.getElementById('ghlStrictGate').style.opacity = '0';
-                        setTimeout(() => { document.getElementById('ghlStrictGate').remove(); }, 500);
-                        handleTypeChange();
-                    }, 800);
-                } else {
-                    // Gebruiker opende URL buiten GoHighLevel om
-                    status.innerText = 'ACCESS DENIED: Missing GHL Context.';
-                    status.classList.replace('text-zinc-500', 'text-red-500');
-                    document.getElementById('ghlStrictGate').querySelector('.bg-gradient-to-r').classList.replace('from-blue-500', 'from-red-500');
-                    document.getElementById('ghlStrictGate').querySelector('.bg-gradient-to-r').classList.replace('to-purple-500', 'to-red-700');
-                }
-            }, 1200);
-        };
+    # 1. BEPAAL AANTAL REQUESTS PER MAAND & AANTAL ITEMS PER REQUEST OP BASIS VAN DE TIER
+    if "MEGA" in plan_tier or "ENTERPRISE" in plan_tier:
+        max_requests_allowed = 5000
+        max_items_per_request = 150
+    elif "ULTRA" in plan_tier:
+        max_requests_allowed = 1500
+        max_items_per_request = 50
+    elif "PRO" in plan_tier or "STANDARD" in plan_tier:
+        max_requests_allowed = 750
+        max_items_per_request = 25
+    else:  # BASIC / FREE
+        max_requests_allowed = 10
+        max_items_per_request = 5
 
-        // --- 2. UI LOGIC ---
-        function onLimitSliderChange(val) {
-            document.getElementById('limitValue').innerText = val;
-        }
+    # 2. INITIALISEER DE GEBRUIKSTELLER
+    if location_id not in GHL_USAGE_TRACKER:
+        GHL_USAGE_TRACKER[location_id] = 0
 
-        function handleTypeChange() {
-            const type = document.getElementById('trendType').value;
-            const countrySelect = document.getElementById('countrySelect');
-            const p90 = document.getElementById('period90');
+    # 3. HACKPROOF CHECK: HEEFT HET SUB-ACCOUNT HET MAXIMAAL AANTAL REQUESTS BEREIKT?
+    if GHL_USAGE_TRACKER[location_id] >= max_requests_allowed:
+        raise HTTPException(
+            status_code=429, 
+            detail=f"Monthly search limit reached ({GHL_USAGE_TRACKER[location_id]}/{max_requests_allowed} requests used). Please upgrade your tier."
+        )
 
-            countrySelect.innerHTML = '';
-            const allowedList = type === 'videos' ? VIDEO_COUNTRIES : HASHTAG_COUNTRIES;
-            
-            allowedList.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c;
-                opt.innerText = c;
-                countrySelect.appendChild(opt);
-            });
+    # 4. CAP HET AANTAL OPGEVRAAGDE ITEMS OP HET MAXIMUM VAN DE TIER
+    if limit > max_items_per_request:
+        limit = max_items_per_request
 
-            if (type === 'videos') {
-                p90.disabled = true;
-                if (currentPeriod === '90') setPeriod('7');
-                p90.classList.add('opacity-30', 'cursor-not-allowed');
-            } else {
-                p90.disabled = false;
-                p90.classList.remove('opacity-30', 'cursor-not-allowed');
-            }
-        }
+    # 5. HAAL DATA OP VIA APIFY
+    data = fetch_trends_from_apify(country, limit, trend_type, period)
 
-        function setPeriod(val) {
-            currentPeriod = val;
-            document.getElementById('period').value = val;
-            document.querySelectorAll('.period-btn').forEach(btn => {
-                if (btn.dataset.val === val) {
-                    btn.classList.replace('text-zinc-400', 'text-white');
-                    btn.classList.add('bg-borderMain');
-                } else {
-                    btn.classList.replace('text-white', 'text-zinc-400');
-                    btn.classList.remove('bg-borderMain');
-                }
-            });
-        }
+    # 6. VERHOOG DE REQUEST TELLER MET +1
+    GHL_USAGE_TRACKER[location_id] += 1
+    
+    return {
+        "status": "success", 
+        "message": "GoHighLevel native request successful", 
+        "location_id": location_id,
+        "tier": plan_tier,
+        "requests_used": GHL_USAGE_TRACKER[location_id],
+        "max_requests_allowed": max_requests_allowed,
+        "items_returned": len(data),
+        "limit_applied": limit, 
+        "data": data
+    }
 
-        // --- 3. UPGRADE MODAL CONTROLS ---
-        function showUpgradeModal() {
-            const modal = document.getElementById('upgradeModal');
-            const box = document.getElementById('upgradeBox');
-            modal.classList.remove('hidden');
-            // Slight delay for animation
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                box.classList.remove('scale-95');
-                box.classList.add('scale-100');
-            }, 10);
-        }
 
-        function closeUpgradeModal() {
-            const modal = document.getElementById('upgradeModal');
-            const box = document.getElementById('upgradeBox');
-            modal.classList.add('opacity-0');
-            box.classList.remove('scale-100');
-            box.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
-        }
-
-        // --- 4. EXECUTE REQUEST TO YOUR BACKEND ---
-        async function executeEngine() {
-            const payload = {
-                location_id: ghlLocationId, // STUUR LOCATIE ID MEE VOOR DE LIMIET CHECK
-                plan_id: ghlPlanId,
-                trend_type: document.getElementById('trendType').value,
-                period: document.getElementById('period').value,
-                limit: parseInt(document.getElementById('limit').value),
-                country: document.getElementById('countrySelect').value
-            };
-
-            document.getElementById('stateEmpty').classList.add('hidden');
-            document.getElementById('stateClean').classList.add('hidden');
-            document.getElementById('executeBtn').disabled = true;
-
-            document.getElementById('stateLoading').classList.remove('hidden');
-            document.getElementById('statusIndicator').className = 'w-2 h-2 rounded-full bg-yellow-500 animate-pulse';
-            document.getElementById('statusText').innerText = 'Backend Request Processing...';
-
-            let progress = 0;
-            const progressTimer = setInterval(() => {
-                progress += 10;
-                if (progress > 90) progress = 90;
-                document.getElementById('loadBar').style.width = progress + '%';
-                document.getElementById('loadPercent').innerText = progress + '%';
-            }, 300);
-
-            try {
-                // Doe het verzoek naar JOUW hackproof backend, NIET naar RapidAPI
-                const response = await fetch(`${BACKEND_API_URL}?location_id=${payload.location_id}&type=${payload.trend_type}&period=${payload.period}&limit=${payload.limit}&country=${payload.country}`);
-                
-                clearInterval(progressTimer);
-                document.getElementById('loadBar').style.width = '100%';
-                document.getElementById('loadPercent').innerText = '100%';
-
-                // DE MAGIE: Check of de backend zegt dat de limiet bereikt is (bijv status 429 of 403)
-                if (response.status === 429 || response.status === 403) {
-                    showUpgradeModal();
-                    resetUIState('Limit Reached', 'bg-red-500');
-                    return;
-                }
-
-                if (!response.ok) throw new Error("Server Error");
-
-                const data = await response.json();
-                renderCleanData(data);
-
-                resetUIState('Data Synced', 'bg-green-500');
-                document.getElementById('stateClean').classList.remove('hidden');
-
-            } catch (err) {
-                clearInterval(progressTimer);
-                alert("Verbindingsfout met je Render Server. Zorg dat de backend draait.");
-                resetUIState('Connection Failed', 'bg-red-500');
-            }
-        }
-
-        function resetUIState(statusText, dotColorClass) {
-            document.getElementById('stateLoading').classList.add('hidden');
-            document.getElementById('executeBtn').disabled = false;
-            document.getElementById('statusIndicator').className = `w-2 h-2 rounded-full ${dotColorClass}`;
-            document.getElementById('statusText').innerText = statusText;
-        }
-
-        function renderCleanData(res) {
-            const container = document.getElementById('stateClean');
-            container.innerHTML = '';
-
-            const items = res.data || [];
-            if (items.length === 0) {
-                container.innerHTML = `<div class="text-center text-xs text-zinc-500 py-8">No results found.</div>`;
-                return;
-            }
-
-            items.forEach((item) => {
-                const card = document.createElement('div');
-                card.className = "bg-bgPanel border border-borderMain rounded-lg p-4 relative overflow-hidden";
-
-                const rank = item.Rank || item.rank || '#';
-                const tag = item.Hashtag || item.hashtag || item.title || 'Trend Item';
-                const views = item["Video Views"] ? Number(item["Video Views"]).toLocaleString() : (item.views || 'N/A');
-
-                card.innerHTML = `
-                    <div class="absolute top-0 left-0 w-1 h-full bg-accent"></div>
-                    <div class="pl-2">
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-xs font-mono font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-md">#${rank}</span>
-                            <h3 class="text-base font-bold text-white tracking-tight">${tag}</h3>
-                        </div>
-                        <p class="text-xs text-zinc-400 font-mono">Views: <span class="text-zinc-200">${views}</span></p>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-    </script>
-</body>
-</html>
+# =====================================================================
+# EXTRA: UPTIME ROBOT / RENDER LIVE HEALTH CHECK
+# =====================================================================
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "API is running"}
