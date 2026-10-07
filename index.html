@@ -99,22 +99,17 @@
                     <!-- TREND TYPE -->
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Trend Type</label>
-                        <select id="trendType" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-accent">
+                        <select id="trendType" onchange="updateCountryOptions()" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-accent">
                             <option value="hashtags">Hashtags</option>
                             <option value="videos">Top Videos</option>
                         </select>
                     </div>
 
-                    <!-- COUNTRY SELECTOR -->
+                    <!-- COUNTRY SELECTOR (Populated dynamically based on trendType) -->
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Country</label>
                         <select id="countrySelect" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 font-mono focus:outline-none focus:border-accent">
-                            <option value="US">United States (US)</option>
-                            <option value="NL">Netherlands (NL)</option>
-                            <option value="DE">Germany (DE)</option>
-                            <option value="GB">United Kingdom (GB)</option>
-                            <option value="FR">France (FR)</option>
-                            <option value="ES">Spain (ES)</option>
+                            <!-- Injected dynamically by JS -->
                         </select>
                     </div>
 
@@ -221,7 +216,7 @@
         </div>
     </div>
 
-    <!-- LOGIC SCRIPT (UNCHANGED BACKEND & GHL VERIFICATION LOGIC) -->
+    <!-- LOGIC SCRIPT -->
     <script>
         // =================================================================
         // CONFIGURATION & RENDER BACKEND URL
@@ -231,6 +226,68 @@
         // 🔴 PASTE YOUR UPGRADE URL HERE FOR CLIENTS
         const UPGRADE_URL = ""; // e.g. "https://your-gohighlevel-checkout-link.com"
 
+        // =================================================================
+        // ALLOWED COUNTRIES LOGIC (MATCHING BACKEND EXACTLY)
+        // =================================================================
+        const HASHTAG_COUNTRIES = [
+            { code: "US", name: "United States (US)" },
+            { code: "FR", name: "France (FR)" },
+            { code: "DE", name: "Germany (DE)" },
+            { code: "IT", name: "Italy (IT)" },
+            { code: "ES", name: "Spain (ES)" },
+            { code: "GB", name: "United Kingdom (GB)" },
+            { code: "AR", name: "Argentina (AR)" },
+            { code: "AU", name: "Australia (AU)" },
+            { code: "BR", name: "Brazil (BR)" },
+            { code: "CA", name: "Canada (CA)" },
+            { code: "CO", name: "Colombia (CO)" },
+            { code: "EG", name: "Egypt (EG)" },
+            { code: "ID", name: "Indonesia (ID)" },
+            { code: "IL", name: "Israel (IL)" },
+            { code: "JP", name: "Japan (JP)" },
+            { code: "KR", name: "South Korea (KR)" },
+            { code: "MY", name: "Malaysia (MY)" },
+            { code: "MX", name: "Mexico (MX)" },
+            { code: "PH", name: "Philippines (PH)" },
+            { code: "SA", name: "Saudi Arabia (SA)" },
+            { code: "SG", name: "Singapore (SG)" },
+            { code: "ZA", name: "South Africa (ZA)" },
+            { code: "TW", name: "Taiwan (TW)" },
+            { code: "TH", name: "Thailand (TH)" },
+            { code: "TR", name: "Turkey (TR)" },
+            { code: "AE", name: "United Arab Emirates (AE)" },
+            { code: "VN", name: "Vietnam (VN)" }
+        ];
+
+        const VIDEO_COUNTRIES = [
+            { code: "US", name: "United States (US)" },
+            { code: "JP", name: "Japan (JP)" },
+            { code: "VN", name: "Vietnam (VN)" },
+            { code: "TH", name: "Thailand (TH)" },
+            { code: "ID", name: "Indonesia (ID)" }
+        ];
+
+        function updateCountryOptions() {
+            const trendType = document.getElementById('trendType').value;
+            const countrySelect = document.getElementById('countrySelect');
+            const countries = (trendType === 'videos') ? VIDEO_COUNTRIES : HASHTAG_COUNTRIES;
+            
+            const currentVal = countrySelect.value;
+            countrySelect.innerHTML = '';
+
+            countries.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.code;
+                opt.textContent = c.name;
+                countrySelect.appendChild(opt);
+            });
+
+            // Keep previous selection if it exists in new country list
+            if (countries.some(c => c.code === currentVal)) {
+                countrySelect.value = currentVal;
+            }
+        }
+
         let currentGhlLocationId = null;
         let currentGhlUserTier = null;
         let currentView = 'clean'; // 'clean' or 'code'
@@ -239,6 +296,9 @@
         // AUTOMATIC LOGIN CHECK ON PAGE LOAD
         // =================================================================
         window.addEventListener('DOMContentLoaded', () => {
+            // Populate initial countries for hashtags
+            updateCountryOptions();
+
             // Set upgrade link targets
             document.getElementById('accessDeniedUpgradeBtn').href = UPGRADE_URL || "#";
             document.getElementById('paywallUpgradeBtn').href = UPGRADE_URL || "#";
@@ -363,7 +423,7 @@
             } catch (error) {
                 alert(`Error: ${error.message}`);
                 emptyState.classList.remove('hidden');
-            } finally {
+            } font-mono {
                 loadingState.classList.add('hidden');
                 if (currentView === 'clean') {
                     resultsGrid.classList.remove('hidden');
