@@ -88,7 +88,7 @@
                         <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                     </div>
                     
-                    <div id="usageBanner" class="pt-2 border-t border-borderMain/60 flex justify-between items-center text-[11px] font-mono">
+                    <div id="usageBanner" class="pt-2 border-t border-borderMain/60 flex justify-between items-center text-[11px] font-mono hidden">
                         <span class="text-zinc-400">Monthly Usage:</span>
                         <span id="usageText" class="text-accent font-bold">0 / 10 Requests</span>
                     </div>
@@ -220,15 +220,14 @@
     <!-- LOGIC SCRIPT -->
     <script>
         const RENDER_BACKEND_URL = "https://jnx-tiktok-api.onrender.com/api/v1/tiktok/ghl-trends";
-        const UPGRADE_URL = ""; 
+        
+        // TODO: VUL HIER JE GHL FUNNEL/CHECKOUT URL IN VOOR UPGRADES
+        const UPGRADE_URL = "https://jouwdomein.com/upgrade"; 
 
         let currentGhlLocationId = null;
         let currentGhlUserTier = "BASIC";
         let currentView = 'clean';
 
-        // -----------------------------------------------------------------
-        // HARDCODED TIER LIMITS (EXACTLY MATCHING FASTAPI BACKEND)
-        // -----------------------------------------------------------------
         const TIER_LIMITS = {
             MEGA: { maxItems: 150, maxRequests: 5000 },
             ENTERPRISE: { maxItems: 150, maxRequests: 5000 },
@@ -252,44 +251,26 @@
             return { name: 'BASIC', ...TIER_LIMITS.BASIC };
         }
 
-        // -----------------------------------------------------------------
-        // COUNTRY ALLOWLISTS MATCHING FASTAPI BACKEND
-        // -----------------------------------------------------------------
         const hashtagCountries = [
-            { code: "US", name: "United States (US)" },
-            { code: "FR", name: "France (FR)" },
-            { code: "DE", name: "Germany (DE)" },
-            { code: "IT", name: "Italy (IT)" },
-            { code: "ES", name: "Spain (ES)" },
-            { code: "GB", name: "United Kingdom (GB)" },
-            { code: "AR", name: "Argentina (AR)" },
-            { code: "AU", name: "Australia (AU)" },
-            { code: "BR", name: "Brazil (BR)" },
-            { code: "CA", name: "Canada (CA)" },
-            { code: "CO", name: "Colombia (CO)" },
-            { code: "EG", name: "Egypt (EG)" },
-            { code: "ID", name: "Indonesia (ID)" },
-            { code: "IL", name: "Israel (IL)" },
-            { code: "JP", name: "Japan (JP)" },
-            { code: "KR", name: "South Korea (KR)" },
-            { code: "MY", name: "Malaysia (MY)" },
-            { code: "MX", name: "Mexico (MX)" },
-            { code: "PH", name: "Philippines (PH)" },
-            { code: "SA", name: "Saudi Arabia (SA)" },
-            { code: "SG", name: "Singapore (SG)" },
-            { code: "ZA", name: "South Africa (ZA)" },
-            { code: "TW", name: "Taiwan (TW)" },
-            { code: "TH", name: "Thailand (TH)" },
-            { code: "TR", name: "Turkey (TR)" },
-            { code: "AE", name: "United Arab Emirates (AE)" },
+            { code: "US", name: "United States (US)" }, { code: "FR", name: "France (FR)" },
+            { code: "DE", name: "Germany (DE)" }, { code: "IT", name: "Italy (IT)" },
+            { code: "ES", name: "Spain (ES)" }, { code: "GB", name: "United Kingdom (GB)" },
+            { code: "AR", name: "Argentina (AR)" }, { code: "AU", name: "Australia (AU)" },
+            { code: "BR", name: "Brazil (BR)" }, { code: "CA", name: "Canada (CA)" },
+            { code: "CO", name: "Colombia (CO)" }, { code: "EG", name: "Egypt (EG)" },
+            { code: "ID", name: "Indonesia (ID)" }, { code: "IL", name: "Israel (IL)" },
+            { code: "JP", name: "Japan (JP)" }, { code: "KR", name: "South Korea (KR)" },
+            { code: "MY", name: "Malaysia (MY)" }, { code: "MX", name: "Mexico (MX)" },
+            { code: "PH", name: "Philippines (PH)" }, { code: "SA", name: "Saudi Arabia (SA)" },
+            { code: "SG", name: "Singapore (SG)" }, { code: "ZA", name: "South Africa (ZA)" },
+            { code: "TW", name: "Taiwan (TW)" }, { code: "TH", name: "Thailand (TH)" },
+            { code: "TR", name: "Turkey (TR)" }, { code: "AE", name: "United Arab Emirates (AE)" },
             { code: "VN", name: "Vietnam (VN)" }
         ];
 
         const videoCountries = [
-            { code: "US", name: "United States (US)" },
-            { code: "JP", name: "Japan (JP)" },
-            { code: "VN", name: "Vietnam (VN)" },
-            { code: "TH", name: "Thailand (TH)" },
+            { code: "US", name: "United States (US)" }, { code: "JP", name: "Japan (JP)" },
+            { code: "VN", name: "Vietnam (VN)" }, { code: "TH", name: "Thailand (TH)" },
             { code: "ID", name: "Indonesia (ID)" }
         ];
 
@@ -297,10 +278,9 @@
             const trendType = document.getElementById('trendType').value;
             const countrySelect = document.getElementById('countrySelect');
             const targetList = (trendType === 'videos') ? videoCountries : hashtagCountries;
-
             const previousValue = countrySelect.value;
+            
             countrySelect.innerHTML = '';
-
             targetList.forEach(item => {
                 const opt = document.createElement('option');
                 opt.value = item.code;
@@ -315,13 +295,9 @@
             }
         }
 
-        // -----------------------------------------------------------------
-        // AUTOMATIC LOGIN & TIER LIMIT INITIALIZATION
-        // -----------------------------------------------------------------
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('accessDeniedUpgradeBtn').href = UPGRADE_URL || "#";
             document.getElementById('paywallUpgradeBtn').href = UPGRADE_URL || "#";
-
             updateCountryDropdown();
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -339,7 +315,6 @@
             const tierBadge = document.getElementById('tierBadge');
             if (tierBadge) tierBadge.innerText = currentGhlUserTier;
 
-            // Configure slider and usage tracker based on active plan tier
             configureTierControls();
         });
 
@@ -350,10 +325,8 @@
             const limitTierHint = document.getElementById('limitTierHint');
             const usageText = document.getElementById('usageText');
 
-            // Apply max attribute to range slider
             limitSlider.max = tierInfo.maxItems.toString();
             
-            // Clamp slider value if current exceeds tier limit
             let currentVal = parseInt(limitSlider.value) || 5;
             if (currentVal > tierInfo.maxItems) {
                 currentVal = tierInfo.maxItems;
@@ -364,8 +337,6 @@
             if (limitTierHint) {
                 limitTierHint.innerText = `Max ${tierInfo.maxItems} items per request (${tierInfo.name})`;
             }
-
-            // Set initial request count banner format
             if (usageText) {
                 usageText.innerText = `0 / ${tierInfo.maxRequests} Requests`;
             }
@@ -392,12 +363,10 @@
             const tierInfo = getTierLimits(currentGhlUserTier);
             let parsed = parseInt(val) || 1;
             
-            // Hard enforcement of tier limit
             if (parsed > tierInfo.maxItems) {
                 parsed = tierInfo.maxItems;
                 document.getElementById('limit').value = parsed;
             }
-
             document.getElementById('limitValue').innerText = parsed;
         }
 
@@ -419,9 +388,6 @@
             }
         }
 
-        // -----------------------------------------------------------------
-        // FETCH DATA FROM RENDER BACKEND
-        // -----------------------------------------------------------------
         async function executeEngine() {
             const searchBtn = document.getElementById('searchBtn');
             const resultsGrid = document.getElementById('resultsGrid');
@@ -433,7 +399,6 @@
             const trendType = document.getElementById('trendType').value;
             const period = document.getElementById('period').value;
             
-            // Clamp requested limit strictly to tier maximum before dispatching request
             const tierInfo = getTierLimits(currentGhlUserTier);
             let limit = parseInt(document.getElementById('limit').value) || 5;
             if (limit > tierInfo.maxItems) {
@@ -467,7 +432,6 @@
 
                 const result = await response.json();
 
-                // Live update of company monthly requests
                 const usageBanner = document.getElementById('usageBanner');
                 const usageText = document.getElementById('usageText');
                 usageBanner.classList.remove('hidden');
@@ -491,9 +455,6 @@
             }
         }
 
-        // -----------------------------------------------------------------
-        // RENDER RESULTS
-        // -----------------------------------------------------------------
         function renderResults(items, type) {
             const resultsGrid = document.getElementById('resultsGrid');
             resultsGrid.innerHTML = '';
@@ -565,7 +526,6 @@
                         ` : ''}
                     `;
                 }
-
                 resultsGrid.appendChild(card);
             });
         }
