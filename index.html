@@ -88,9 +88,9 @@
                         <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                     </div>
                     
-                    <div id="usageBanner" class="hidden pt-2 border-t border-borderMain/60 flex justify-between items-center text-[11px] font-mono">
+                    <div id="usageBanner" class="pt-2 border-t border-borderMain/60 flex justify-between items-center text-[11px] font-mono">
                         <span class="text-zinc-400">Monthly Usage:</span>
-                        <span id="usageText" class="text-accent font-bold">0 / 0 Requests</span>
+                        <span id="usageText" class="text-accent font-bold">0 / 10 Requests</span>
                     </div>
                 </div>
 
@@ -130,7 +130,8 @@
                             <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Results Limit</label>
                             <span id="limitValue" class="text-xs font-mono text-accent bg-accent/10 px-2 py-0.5 rounded-md">5</span>
                         </div>
-                        <input type="range" id="limit" min="1" max="150" value="5" class="w-full h-1 bg-borderMain rounded-lg appearance-none cursor-pointer accent-accent" oninput="onLimitSliderChange(this.value)">
+                        <input type="range" id="limit" min="1" max="5" value="5" class="w-full h-1 bg-borderMain rounded-lg appearance-none cursor-pointer accent-accent" oninput="onLimitSliderChange(this.value)">
+                        <p id="limitTierHint" class="text-[10px] text-zinc-500 font-mono text-right">Max 5 items per request (BASIC)</p>
                     </div>
                 </div>
             </div>
@@ -222,8 +223,34 @@
         const UPGRADE_URL = ""; 
 
         let currentGhlLocationId = null;
-        let currentGhlUserTier = null;
+        let currentGhlUserTier = "BASIC";
         let currentView = 'clean';
+
+        // -----------------------------------------------------------------
+        // HARDCODED TIER LIMITS (EXACTLY MATCHING FASTAPI BACKEND)
+        // -----------------------------------------------------------------
+        const TIER_LIMITS = {
+            MEGA: { maxItems: 150, maxRequests: 5000 },
+            ENTERPRISE: { maxItems: 150, maxRequests: 5000 },
+            ULTRA: { maxItems: 50, maxRequests: 1500 },
+            PRO: { maxItems: 25, maxRequests: 750 },
+            STANDARD: { maxItems: 25, maxRequests: 750 },
+            BASIC: { maxItems: 5, maxRequests: 10 }
+        };
+
+        function getTierLimits(tierStr) {
+            const normalized = (tierStr || 'BASIC').toUpperCase();
+            if (normalized.includes('MEGA') || normalized.includes('ENTERPRISE')) {
+                return { name: 'MEGA', ...TIER_LIMITS.MEGA };
+            }
+            if (normalized.includes('ULTRA')) {
+                return { name: 'ULTRA', ...TIER_LIMITS.ULTRA };
+            }
+            if (normalized.includes('PRO') || normalized.includes('STANDARD')) {
+                return { name: 'PRO', ...TIER_LIMITS.PRO };
+            }
+            return { name: 'BASIC', ...TIER_LIMITS.BASIC };
+        }
 
         // -----------------------------------------------------------------
         // COUNTRY ALLOWLISTS MATCHING FASTAPI BACKEND
@@ -289,13 +316,13 @@
         }
 
         // -----------------------------------------------------------------
-        // AUTOMATIC LOGIN CHECK ON PAGE LOAD
+        // AUTOMATIC LOGIN & TIER LIMIT INITIALIZATION
         // -----------------------------------------------------------------
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('accessDeniedUpgradeBtn').href = UPGRADE_URL || "#";
             document.getElementById('paywallUpgradeBtn').href = UPGRADE_URL || "#";
 
-            updateCountryDropdown(); // Populate dropdown initial state
+            updateCountryDropdown();
 
             const urlParams = new URLSearchParams(window.location.search);
             currentGhlLocationId = urlParams.get('location_id') || urlParams.get('locationId') || window.ghlLocationId;
@@ -311,7 +338,38 @@
             
             const tierBadge = document.getElementById('tierBadge');
             if (tierBadge) tierBadge.innerText = currentGhlUserTier;
+
+            // Configure slider and usage tracker based on active plan tier
+            configureTierControls();
         });
+
+        function configureTierControls() {
+            const tierInfo = getTierLimits(currentGhlUserTier);
+            const limitSlider = document.getElementById('limit');
+            const limitValue = document.getElementById('limitValue');
+            const limitTierHint = document.getElementById('limitTierHint');
+            const usageText = document.getElementById('usageText');
+
+            // Apply max attribute to range slider
+            limitSlider.max = tierInfo.maxItems.toString();
+            
+            // Clamp slider value if current exceeds tier limit
+            let currentVal = parseInt(limitSlider.value) || 5;
+            if (currentVal > tierInfo.maxItems) {
+                currentVal = tierInfo.maxItems;
+            }
+            limitSlider.value = currentVal;
+            limitValue.innerText = currentVal;
+
+            if (limitTierHint) {
+                limitTierHint.innerText = `Max ${tierInfo.maxItems} items per request (${tierInfo.name})`;
+            }
+
+            // Set initial request count banner format
+            if (usageText) {
+                usageText.innerText = `0 / ${tierInfo.maxRequests} Requests`;
+            }
+        }
 
         function showAccessDenied(reason) {
             document.getElementById('dashboardApp').classList.add('hidden');
@@ -331,7 +389,16 @@
         }
 
         function onLimitSliderChange(val) {
-            document.getElementById('limitValue').innerText = val;
+            const tierInfo = getTierLimits(currentGhlUserTier);
+            let parsed = parseInt(val) || 1;
+            
+            // Hard enforcement of tier limit
+            if (parsed > tierInfo.maxItems) {
+                parsed = tierInfo.maxItems;
+                document.getElementById('limit').value = parsed;
+            }
+
+            document.getElementById('limitValue').innerText = parsed;
         }
 
         function toggleView() {
@@ -365,7 +432,15 @@
             const country = document.getElementById('countrySelect').value;
             const trendType = document.getElementById('trendType').value;
             const period = document.getElementById('period').value;
-            const limit = document.getElementById('limit').value;
+            
+            // Clamp requested limit strictly to tier maximum before dispatching request
+            const tierInfo = getTierLimits(currentGhlUserTier);
+            let limit = parseInt(document.getElementById('limit').value) || 5;
+            if (limit > tierInfo.maxItems) {
+                limit = tierInfo.maxItems;
+                document.getElementById('limit').value = limit;
+                document.getElementById('limitValue').innerText = limit;
+            }
 
             searchBtn.disabled = true;
             searchBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>SCANNING TIKTOK...</span>`;
@@ -392,6 +467,7 @@
 
                 const result = await response.json();
 
+                // Live update of company monthly requests
                 const usageBanner = document.getElementById('usageBanner');
                 const usageText = document.getElementById('usageText');
                 usageBanner.classList.remove('hidden');
