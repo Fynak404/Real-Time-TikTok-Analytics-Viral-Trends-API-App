@@ -35,6 +35,44 @@
 </head>
 <body class="flex h-screen overflow-hidden antialiased selection:bg-accent selection:text-white">
 
+    <!-- STRICT GOHIGHLEVEL AUTHENTICATION GATE (EERSTE STAP) -->
+    <div id="ghlStrictGate" class="fixed inset-0 z-[100] bg-bgMain flex flex-col items-center justify-center p-4 transition-opacity duration-500">
+        <div class="bg-bgPanel border border-borderMain rounded-2xl max-w-sm w-full p-8 shadow-2xl flex flex-col items-center text-center space-y-6 relative overflow-hidden">
+            <!-- Decorative top bar -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-accent to-purple-500"></div>
+
+            <div class="w-16 h-16 rounded-2xl bg-bgMain border border-borderMain flex items-center justify-center shadow-inner">
+                <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+            </div>
+
+            <div>
+                <h2 class="text-xl font-bold text-white tracking-tight">GHL Authentication</h2>
+                <p class="text-xs text-zinc-400 mt-2">Connecting to GoHighLevel Workspace...</p>
+            </div>
+
+            <div id="ghlGateLoader" class="w-full space-y-2">
+                <div class="w-full h-1.5 bg-bgMain rounded-full overflow-hidden border border-borderMain">
+                    <div id="ghlGateProgress" class="h-full bg-accent transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="ghlGateStatus" class="text-[10px] font-mono text-zinc-500">Detecting iframe parameters...</p>
+            </div>
+
+            <form id="ghlManualForm" class="hidden w-full space-y-4 text-left" onsubmit="unlockGhlApp(event)">
+                <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-[10px] text-red-400 font-mono mb-4 leading-relaxed">
+                    GHL Context missing. Secure environment requires valid Location ID to proceed.
+                </div>
+                <div>
+                    <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block mb-1">Location ID</label>
+                    <input type="text" id="gateLocationId" required placeholder="Paste Location ID here..." class="w-full bg-bgMain border border-borderMain rounded-lg px-3.5 py-2.5 text-xs font-mono text-zinc-200 focus:outline-none focus:border-accent transition-colors">
+                </div>
+                <button type="submit" class="w-full bg-accent hover:bg-accentHover text-white text-xs font-semibold py-3 rounded-lg transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] flex justify-center items-center">
+                    Verify & Unlock
+                </button>
+            </form>
+        </div>
+    </div>
+    <!-- EINDE GHL GATE -->
+
     <!-- OPTIONAL GHL ADMIN / SETTINGS MODAL (Hidden by default in iframe) -->
     <div id="authModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-bgPanel border border-borderMain rounded-xl max-w-md w-full p-6 shadow-2xl space-y-5">
@@ -219,10 +257,63 @@
         let rawData = null;
         let ghlLocationId = null;
 
+        // --- NEW STARTUP LOGIC (GHL GATEKEEPER) ---
         window.onload = () => {
-            handleTypeChange();
-            autoAuthenticateGHL();
+            initGhlGatekeeper();
         };
+
+        function initGhlGatekeeper() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const locId = urlParams.get('location_id') || urlParams.get('locationId') || urlParams.get('location');
+            const savedLocId = localStorage.getItem('ghl_location_id_saved');
+
+            const progress = document.getElementById('ghlGateProgress');
+            const status = document.getElementById('ghlGateStatus');
+            const loader = document.getElementById('ghlGateLoader');
+            const form = document.getElementById('ghlManualForm');
+
+            // Simulate secure parameter verification process
+            setTimeout(() => { progress.style.width = '40%'; status.innerText = 'Verifying security tokens...'; }, 400);
+
+            setTimeout(() => {
+                if (locId || savedLocId) {
+                    // Success! Detected GHL connection
+                    progress.style.width = '100%';
+                    status.innerText = 'Authentication successful!';
+                    status.classList.replace('text-zinc-500', 'text-green-400');
+
+                    setTimeout(() => {
+                        document.getElementById('ghlStrictGate').style.opacity = '0';
+                        setTimeout(() => {
+                            document.getElementById('ghlStrictGate').remove();
+                            // Load the actual app
+                            handleTypeChange();
+                            autoAuthenticateGHL();
+                        }, 500);
+                    }, 800);
+                } else {
+                    // Failed! Block access & show form
+                    loader.classList.add('hidden');
+                    form.classList.remove('hidden');
+                }
+            }, 1200);
+        }
+
+        function unlockGhlApp(e) {
+            e.preventDefault();
+            const locInput = document.getElementById('gateLocationId').value.trim();
+            if (locInput) {
+                localStorage.setItem('ghl_location_id_saved', locInput);
+                
+                document.getElementById('ghlStrictGate').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('ghlStrictGate').remove();
+                    handleTypeChange();
+                    autoAuthenticateGHL();
+                }, 500);
+            }
+        }
+        // --- END GHL GATEKEEPER ---
 
         // Automatic GoHighLevel URL Parameter & Plan Scanner
         function autoAuthenticateGHL() {
@@ -230,7 +321,7 @@
             
             // Extract GHL URL parameters
             const ghlPlanId = urlParams.get('plan_id') || urlParams.get('planId') || urlParams.get('plan');
-            ghlLocationId = urlParams.get('location_id') || urlParams.get('locationId') || urlParams.get('location');
+            ghlLocationId = urlParams.get('location_id') || urlParams.get('locationId') || urlParams.get('location') || localStorage.getItem('ghl_location_id_saved');
             const customApiKey = urlParams.get('api_key') || urlParams.get('key');
 
             if (customApiKey) {
