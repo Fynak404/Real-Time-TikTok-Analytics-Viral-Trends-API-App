@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JNX Global | TikTok Analytics Engine (GHL Edition)</title>
+    <title>JNX Global | TikTok Analytics Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -54,7 +54,7 @@
             <div>
                 <h2 class="text-2xl font-bold text-white mb-2">Access Denied</h2>
                 <p id="accessDeniedReason" class="text-zinc-400 text-xs leading-relaxed">
-                    This application can only be accessed from within your GoHighLevel dashboard with an active subscription.
+                    This application can only be accessed from within your dashboard with an active subscription.
                 </p>
             </div>
             <a id="accessDeniedUpgradeBtn" href="#" target="_blank" class="block w-full py-3 rounded-xl font-semibold text-xs text-white tiktok-gradient shadow-lg hover:opacity-95 transition-all">
@@ -77,7 +77,7 @@
                         <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
                             JNX Analytics
                         </h1>
-                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">GHL Viral Engine</p>
+                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Tiktok Viral Engine</p>
                     </div>
                 </div>
             </div>
@@ -163,7 +163,7 @@
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                     </span>
-                    <span id="statusText" class="font-mono text-[11px]">GHL Live Session Active</span>
+                    <span id="statusText" class="font-mono text-[11px]">Live Session Active</span>
                 </div>
                 
                 <button id="toggleViewBtn" onclick="toggleView()" class="hidden text-xs px-3 py-1.5 border border-borderMain rounded-lg hover:bg-bgPanel text-zinc-300 transition-colors flex items-center gap-2 font-mono">
@@ -317,7 +317,7 @@
             currentGhlUserTier = (urlParams.get('tier') || urlParams.get('plan') || window.ghlUserPlan || "BASIC").toUpperCase();
 
             if (!currentGhlLocationId || currentGhlLocationId === "UNKNOWN") {
-                showAccessDenied("No valid GoHighLevel session detected. Please launch this app directly inside your GHL dashboard.");
+                showAccessDenied("No valid session detected. Please launch this app directly inside your dashboard.");
                 return;
             }
 
