@@ -1,622 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JNX Global | TikTok Analytics Engine</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'Consolas', 'monospace']
-                    },
-                    colors: {
-                        bgMain: '#09090b',
-                        bgPanel: '#121216',
-                        bgCard: '#18181b',
-                        borderMain: '#27272a',
-                        borderLight: '#3f3f46',
-                        accent: '#6366f1',
-                        accentHover: '#4f46e5'
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { background-color: #09090b; color: #f4f4f5; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #09090b; }
-        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
-        .tiktok-gradient {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-        }
-        .glass-panel {
-            background: rgba(18, 18, 22, 0.7);
-            backdrop-filter: blur(12px);
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AllStack — Dashboard Ready</title>
+<style>
+  :root {
+    --bg: #0F0C16;
+    --surface: #161224;
+    --border: rgba(255,255,255,0.08);
+    --text: #FFFFFF;
+    --muted: #8B8794;
+    --mono: #B4B0BE;
+    --accent: #A855F7;
+    --accent-hover: #9333EA;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --mono-font: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 56px 40px;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+  }
+  .check {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 28px;
+    border-radius: 50%;
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--accent);
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .sub {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-bottom: 32px;
+  }
+  .url-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-family: var(--mono-font);
+    font-size: 14px;
+    color: var(--mono);
+    margin-bottom: 12px;
+    user-select: all;
+    -webkit-user-select: all;
+  }
+  .bookmark {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .bookmark span {
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .btn {
+    display: inline-block;
+    width: 100%;
+    padding: 15px 24px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+  }
+  .btn:active {
+    transform: translateY(0);
+  }
+  .footer {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 24px;
+    line-height: 1.5;
+  }
+</style>
 </head>
-<body class="flex h-screen overflow-hidden antialiased selection:bg-accent selection:text-white font-sans">
-
-    <!-- BLOCK / ACCESS DENIED SCREEN -->
-    <div id="accessDeniedScreen" class="hidden fixed inset-0 bg-bgMain z-50 flex items-center justify-center p-6 text-center">
-        <div class="bg-bgPanel border border-red-500/30 max-w-md w-full p-8 rounded-2xl shadow-2xl relative overflow-hidden space-y-5">
-            <div class="w-16 h-16 bg-red-500/10 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-red-500/20">
-                <i class="fas fa-lock"></i>
-            </div>
-            <div>
-                <h2 class="text-2xl font-bold text-white mb-2">Access Denied</h2>
-                <p id="accessDeniedReason" class="text-zinc-400 text-xs leading-relaxed">
-                    This application can only be accessed from within your dashboard with an active subscription.
-                </p>
-            </div>
-            <a id="accessDeniedUpgradeBtn" href="#" target="_blank" class="block w-full py-3 rounded-xl font-semibold text-xs text-white tiktok-gradient shadow-lg hover:opacity-95 transition-all">
-                View Subscription Plans
-            </a>
-        </div>
-    </div>
-
-    <!-- MAIN DASHBOARD APP -->
-    <div id="dashboardApp" class="hidden flex h-screen w-full overflow-hidden">
-        
-        <!-- LEFT NAVIGATION SIDEBAR -->
-        <aside class="w-80 bg-bgPanel border-r border-borderMain flex flex-col z-10 shrink-0">
-            <div class="p-5 border-b border-borderMain flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl tiktok-gradient flex items-center justify-center text-white font-bold text-base shadow-lg shadow-indigo-500/20">
-                        <i class="fab fa-tiktok"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-                            JNX Analytics
-                        </h1>
-                        <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Tiktok Viral Engine</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex-1 overflow-y-auto p-5 space-y-5">
-                
-                <!-- ACTIVE PLAN & USAGE CARD -->
-                <div class="bg-bgMain border border-borderMain rounded-xl p-4 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-[9px] text-zinc-500 uppercase font-semibold tracking-wider">Active Plan</p>
-                            <span id="tierBadge" class="text-xs font-bold text-accent tracking-wide">BASIC</span>
-                        </div>
-                        <span class="flex h-2 w-2 relative">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                        </span>
-                    </div>
-                    
-                    <div id="usageBanner" class="pt-2 border-t border-borderMain/60 flex justify-between items-center text-[11px] font-mono">
-                        <span class="text-zinc-400">Monthly Usage:</span>
-                        <span id="usageText" class="text-accent font-bold">0 / 10 Requests</span>
-                    </div>
-                </div>
-
-                <!-- CONTROLS & FILTERS -->
-                <div class="space-y-4">
-                    <!-- TREND TYPE -->
-                    <div class="space-y-1.5">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Trend Type</label>
-                        <select id="trendType" onchange="updateCountryDropdown()" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-accent">
-                            <option value="hashtags">Hashtags</option>
-                            <option value="videos">Top Videos</option>
-                        </select>
-                    </div>
-
-                    <!-- COUNTRY SELECTOR -->
-                    <div class="space-y-1.5">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Country</label>
-                        <select id="countrySelect" class="w-full bg-bgMain border border-borderMain rounded-lg px-3 py-2 text-xs text-zinc-200 font-mono focus:outline-none focus:border-accent">
-                            <!-- JS dynamic fill -->
-                        </select>
-                    </div>
-
-                    <!-- PERIOD SELECTOR -->
-                    <div class="space-y-1.5">
-                        <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Time Period</label>
-                        <div class="flex bg-bgMain border border-borderMain rounded-lg p-1 gap-1">
-                            <button type="button" onclick="setPeriod('7')" class="period-btn flex-1 py-1 text-xs rounded-md bg-accent text-white font-medium transition-all" data-val="7">7 Days</button>
-                            <button type="button" onclick="setPeriod('30')" class="period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white transition-all" data-val="30">30 Days</button>
-                            <button type="button" onclick="setPeriod('90')" class="period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white transition-all" data-val="90">90 Days</button>
-                        </div>
-                        <input type="hidden" id="period" value="7">
-                    </div>
-
-                    <!-- LIMIT CONTROL -->
-                    <div class="space-y-2 pt-1">
-                        <div class="flex justify-between items-center">
-                            <label class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Results Limit</label>
-                            <span id="limitValue" class="text-xs font-mono text-accent bg-accent/10 px-2 py-0.5 rounded-md font-bold">5</span>
-                        </div>
-                        <input type="range" id="limit" min="1" max="5" value="5" class="w-full h-1 bg-borderMain rounded-lg appearance-none cursor-pointer accent-accent" oninput="onLimitSliderChange(this.value)">
-                        <p id="limitTierHint" class="text-[10px] text-zinc-500 font-mono text-right">Max 5 items per request (BASIC)</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- EXECUTE BUTTON -->
-            <div class="p-5 border-t border-borderMain">
-                <button id="searchBtn" onclick="executeEngine()" class="w-full bg-accent hover:bg-accentHover text-white text-xs font-bold py-3 rounded-xl transition-all flex justify-center items-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.25)]">
-                    <i class="fas fa-bolt text-[11px]"></i>
-                    <span>FETCH VIRAL TRENDS</span>
-                </button>
-            </div>
-        </aside>
-
-        <!-- MAIN WORKSPACE -->
-        <main class="flex-1 flex flex-col bg-bgMain">
-            <!-- TOP NAVBAR -->
-            <header class="h-14 border-b border-borderMain flex items-center justify-between px-6 bg-bgMain">
-                <div id="userInfoHeader" class="flex items-center gap-3 text-xs text-zinc-400">
-                    <span class="flex h-2 w-2 relative">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    <span id="statusText" class="font-mono text-[11px]">Live Session Active</span>
-                </div>
-                
-                <button id="toggleViewBtn" onclick="toggleView()" class="hidden text-xs px-3 py-1.5 border border-borderMain rounded-lg hover:bg-bgPanel text-zinc-300 transition-colors flex items-center gap-2 font-mono">
-                    <i class="fas fa-code text-[11px]"></i>
-                    <span id="toggleText">Switch to Pure Code</span>
-                </button>
-            </header>
-
-            <!-- WORKSPACE CONTENT AREA -->
-            <div class="flex-1 p-6 overflow-y-auto relative">
-                
-                <!-- EMPTY STATE -->
-                <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center">
-                    <div class="w-16 h-16 rounded-2xl bg-borderMain/30 flex items-center justify-center text-zinc-600 mb-4 border border-borderMain">
-                        <i class="fas fa-chart-line text-2xl"></i>
-                    </div>
-                    <h3 class="text-sm font-semibold text-zinc-200">Ready to Scan Live Ecosystem</h3>
-                    <p class="text-xs text-zinc-500 mt-1 max-w-xs">Select your parameters in the sidebar and trigger "FETCH VIRAL TRENDS".</p>
-                </div>
-
-                <!-- LOADING STATE -->
-                <div id="loadingState" class="hidden h-full flex flex-col items-center justify-center">
-                    <div class="w-80 text-center space-y-4">
-                        <div class="w-12 h-12 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
-                        <p class="text-xs font-mono text-zinc-400">Performing live scan on TikTok feeds...</p>
-                    </div>
-                </div>
-
-                <!-- VISUAL RICH CARDS GRID (100% RapidAPI Look) -->
-                <div id="resultsGrid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto pb-10">
-                    <!-- Dynamic rich trends inject here -->
-                </div>
-
-                <!-- PURE CODE OUTPUT -->
-                <div id="codeView" class="hidden h-full max-w-6xl mx-auto">
-                    <div class="bg-bgPanel border border-borderMain rounded-2xl h-full overflow-hidden flex flex-col shadow-2xl">
-                        <div class="bg-bgMain border-b border-borderMain px-5 py-3 flex justify-between items-center text-[11px] font-mono">
-                            <span class="text-zinc-500 flex items-center gap-2"><i class="fas fa-terminal"></i> RAW_JSON_PAYLOAD</span>
-                            <span class="text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20 font-bold">200 OK</span>
-                        </div>
-                        <pre class="p-5 text-xs font-mono text-zinc-300 overflow-auto flex-1 leading-relaxed"><code id="codeContent"></code></pre>
-                    </div>
-                </div>
-
-            </div>
-        </main>
-    </div>
-
-    <!-- PAYWALL / LIMIT REACHED MODAL -->
-    <div id="paywallModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="bg-bgPanel max-w-md w-full p-6 rounded-2xl border border-indigo-500/30 text-center relative space-y-4 shadow-2xl">
-            <div class="w-14 h-14 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto text-xl border border-indigo-500/20">
-                <i class="fas fa-rocket"></i>
-            </div>
-            <div>
-                <h2 class="text-xl font-bold text-white mb-1">Limit Reached!</h2>
-                <p id="paywallMessage" class="text-zinc-400 text-xs leading-relaxed">
-                    You have reached the maximum number of searches allowed for your plan. Upgrade to instantly unlock higher throughput.
-                </p>
-            </div>
-            <a id="paywallUpgradeBtn" href="#" target="_blank" class="block w-full py-3 rounded-xl font-semibold text-xs text-white tiktok-gradient shadow-lg hover:opacity-95 transition-all">
-                UPGRADE NOW
-            </a>
-            <button onclick="closePaywall()" class="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors">Close</button>
-        </div>
-    </div>
-
-    <!-- LOGIC SCRIPT -->
-    <script>
-        const RENDER_BACKEND_URL = "https://jnx-tiktok-api.onrender.com/api/v1/tiktok/ghl-trends";
-        const UPGRADE_URL = "https://jouwdomein.com/upgrade"; 
-
-        let currentGhlLocationId = null;
-        let currentGhlUserTier = "BASIC";
-        let currentView = 'clean';
-
-        const TIER_LIMITS = {
-            MEGA: { maxItems: 150, maxRequests: 5000 },
-            ENTERPRISE: { maxItems: 150, maxRequests: 5000 },
-            ULTRA: { maxItems: 50, maxRequests: 1500 },
-            PRO: { maxItems: 25, maxRequests: 750 },
-            STANDARD: { maxItems: 25, maxRequests: 750 },
-            BASIC: { maxItems: 5, maxRequests: 10 }
-        };
-
-        function getTierLimits(tierStr) {
-            const normalized = (tierStr || 'BASIC').toUpperCase();
-            if (normalized.includes('MEGA') || normalized.includes('ENTERPRISE')) {
-                return { name: 'MEGA', ...TIER_LIMITS.MEGA };
-            }
-            if (normalized.includes('ULTRA')) {
-                return { name: 'ULTRA', ...TIER_LIMITS.ULTRA };
-            }
-            if (normalized.includes('PRO') || normalized.includes('STANDARD')) {
-                return { name: 'PRO', ...TIER_LIMITS.PRO };
-            }
-            return { name: 'BASIC', ...TIER_LIMITS.BASIC };
-        }
-
-        const hashtagCountries = [
-            { code: "US", name: "United States (US)" }, { code: "FR", name: "France (FR)" },
-            { code: "DE", name: "Germany (DE)" }, { code: "IT", name: "Italy (IT)" },
-            { code: "ES", name: "Spain (ES)" }, { code: "GB", name: "United Kingdom (GB)" },
-            { code: "AR", name: "Argentina (AR)" }, { code: "AU", name: "Australia (AU)" },
-            { code: "BR", name: "Brazil (BR)" }, { code: "CA", name: "Canada (CA)" },
-            { code: "CO", name: "Colombia (CO)" }, { code: "EG", name: "Egypt (EG)" },
-            { code: "ID", name: "Indonesia (ID)" }, { code: "IL", name: "Israel (IL)" },
-            { code: "JP", name: "Japan (JP)" }, { code: "KR", name: "South Korea (KR)" },
-            { code: "MY", name: "Malaysia (MY)" }, { code: "MX", name: "Mexico (MX)" },
-            { code: "PH", name: "Philippines (PH)" }, { code: "SA", name: "Saudi Arabia (SA)" },
-            { code: "SG", name: "Singapore (SG)" }, { code: "ZA", name: "South Africa (ZA)" },
-            { code: "TW", name: "Taiwan (TW)" }, { code: "TH", name: "Thailand (TH)" },
-            { code: "TR", name: "Turkey (TR)" }, { code: "AE", name: "United Arab Emirates (AE)" },
-            { code: "VN", name: "Vietnam (VN)" }
-        ];
-
-        const videoCountries = [
-            { code: "US", name: "United States (US)" }, { code: "JP", name: "Japan (JP)" },
-            { code: "VN", name: "Vietnam (VN)" }, { code: "TH", name: "Thailand (TH)" },
-            { code: "ID", name: "Indonesia (ID)" }
-        ];
-
-        function updateCountryDropdown() {
-            const trendType = document.getElementById('trendType').value;
-            const countrySelect = document.getElementById('countrySelect');
-            const targetList = (trendType === 'videos') ? videoCountries : hashtagCountries;
-            const previousValue = countrySelect.value;
-            
-            countrySelect.innerHTML = '';
-            targetList.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.code;
-                opt.textContent = item.name;
-                countrySelect.appendChild(opt);
-            });
-
-            if (targetList.some(item => item.code === previousValue)) {
-                countrySelect.value = previousValue;
-            } else {
-                countrySelect.value = targetList[0].code;
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('accessDeniedUpgradeBtn').href = UPGRADE_URL || "#";
-            document.getElementById('paywallUpgradeBtn').href = UPGRADE_URL || "#";
-            updateCountryDropdown();
-
-            const urlParams = new URLSearchParams(window.location.search);
-            currentGhlLocationId = urlParams.get('location_id') || urlParams.get('locationId') || window.ghlLocationId;
-            currentGhlUserTier = (urlParams.get('tier') || urlParams.get('plan') || window.ghlUserPlan || "BASIC").toUpperCase();
-
-            if (!currentGhlLocationId || currentGhlLocationId === "UNKNOWN") {
-                showAccessDenied("No valid session detected. Please launch this app directly inside your dashboard.");
-                return;
-            }
-
-            document.getElementById('accessDeniedScreen').classList.add('hidden');
-            document.getElementById('dashboardApp').classList.remove('hidden');
-            
-            const tierBadge = document.getElementById('tierBadge');
-            if (tierBadge) tierBadge.innerText = currentGhlUserTier;
-
-            configureTierControls();
-        });
-
-        function configureTierControls() {
-            const tierInfo = getTierLimits(currentGhlUserTier);
-            const limitSlider = document.getElementById('limit');
-            const limitValue = document.getElementById('limitValue');
-            const limitTierHint = document.getElementById('limitTierHint');
-            const usageText = document.getElementById('usageText');
-
-            limitSlider.max = tierInfo.maxItems.toString();
-            
-            let currentVal = parseInt(limitSlider.value) || 5;
-            if (currentVal > tierInfo.maxItems) {
-                currentVal = tierInfo.maxItems;
-            }
-            limitSlider.value = currentVal;
-            limitValue.innerText = currentVal;
-
-            if (limitTierHint) {
-                limitTierHint.innerText = `Max ${tierInfo.maxItems} items per request (${tierInfo.name})`;
-            }
-            if (usageText) {
-                usageText.innerText = `0 / ${tierInfo.maxRequests} Requests`;
-            }
-        }
-
-        function showAccessDenied(reason) {
-            document.getElementById('dashboardApp').classList.add('hidden');
-            document.getElementById('accessDeniedScreen').classList.remove('hidden');
-            document.getElementById('accessDeniedReason').innerText = reason;
-        }
-
-        function setPeriod(val) {
-            document.getElementById('period').value = val;
-            document.querySelectorAll('.period-btn').forEach(btn => {
-                if (btn.getAttribute('data-val') === val) {
-                    btn.className = "period-btn flex-1 py-1 text-xs rounded-md bg-accent text-white font-medium transition-all";
-                } else {
-                    btn.className = "period-btn flex-1 py-1 text-xs rounded-md text-zinc-400 hover:text-white transition-all";
-                }
-            });
-        }
-
-        function onLimitSliderChange(val) {
-            const tierInfo = getTierLimits(currentGhlUserTier);
-            let parsed = parseInt(val) || 1;
-            
-            if (parsed > tierInfo.maxItems) {
-                parsed = tierInfo.maxItems;
-                document.getElementById('limit').value = parsed;
-            }
-            document.getElementById('limitValue').innerText = parsed;
-        }
-
-        function toggleView() {
-            const cleanView = document.getElementById('resultsGrid');
-            const codeView = document.getElementById('codeView');
-            const toggleText = document.getElementById('toggleText');
-
-            if (currentView === 'clean') {
-                currentView = 'code';
-                cleanView.classList.add('hidden');
-                codeView.classList.remove('hidden');
-                toggleText.innerText = 'Switch to Visual View';
-            } else {
-                currentView = 'clean';
-                codeView.classList.add('hidden');
-                cleanView.classList.remove('hidden');
-                toggleText.innerText = 'Switch to Pure Code';
-            }
-        }
-
-        function formatNum(num) {
-            if (!num || num === 'N/A') return 'N/A';
-            const n = parseInt(num);
-            if (isNaN(n)) return num;
-            if (n >= 1000000000) return (n / 1000000000).toFixed(1) + 'B';
-            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-            return n.toLocaleString();
-        }
-
-        async function executeEngine() {
-            const searchBtn = document.getElementById('searchBtn');
-            const resultsGrid = document.getElementById('resultsGrid');
-            const emptyState = document.getElementById('emptyState');
-            const loadingState = document.getElementById('loadingState');
-            const toggleViewBtn = document.getElementById('toggleViewBtn');
-
-            const country = document.getElementById('countrySelect').value;
-            const trendType = document.getElementById('trendType').value;
-            const period = document.getElementById('period').value;
-            
-            const tierInfo = getTierLimits(currentGhlUserTier);
-            let limit = parseInt(document.getElementById('limit').value) || 5;
-            if (limit > tierInfo.maxItems) {
-                limit = tierInfo.maxItems;
-                document.getElementById('limit').value = limit;
-                document.getElementById('limitValue').innerText = limit;
-            }
-
-            searchBtn.disabled = true;
-            searchBtn.innerHTML = `<i class="fas fa-spinner fa-spin text-xs"></i> <span>SCANNING...</span>`;
-            
-            emptyState.classList.add('hidden');
-            resultsGrid.classList.add('hidden');
-            loadingState.classList.remove('hidden');
-
-            const requestUrl = `${RENDER_BACKEND_URL}?location_id=${encodeURIComponent(currentGhlLocationId)}&plan_id=${encodeURIComponent(currentGhlUserTier)}&country=${country}&trend_type=${trendType}&period=${period}&limit=${limit}`;
-
-            try {
-                const response = await fetch(requestUrl);
-
-                if (response.status === 429) {
-                    const errorData = await response.json();
-                    showPaywall(errorData.detail);
-                    return;
-                }
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.detail || "Server error while fetching trend data.");
-                }
-
-                const result = await response.json();
-
-                const usageBanner = document.getElementById('usageBanner');
-                const usageText = document.getElementById('usageText');
-                if (usageBanner) usageBanner.classList.remove('hidden');
-                if (usageText) usageText.innerText = `${result.requests_used || 1} / ${result.max_requests_allowed || tierInfo.maxRequests} Requests`;
-
-                document.getElementById('codeContent').textContent = JSON.stringify(result, null, 2);
-                toggleViewBtn.classList.remove('hidden');
-
-                renderResults(result.data, trendType);
-
-            } catch (error) {
-                alert(`Error: ${error.message}`);
-                emptyState.classList.remove('hidden');
-            } finally {
-                loadingState.classList.add('hidden');
-                if (currentView === 'clean') {
-                    resultsGrid.classList.remove('hidden');
-                }
-                searchBtn.disabled = false;
-                searchBtn.innerHTML = `<i class="fas fa-bolt text-[11px]"></i> <span>FETCH VIRAL TRENDS</span>`;
-            }
-        }
-
-        function renderResults(items, type) {
-            const resultsGrid = document.getElementById('resultsGrid');
-            resultsGrid.innerHTML = '';
-
-            if (!items || items.length === 0) {
-                resultsGrid.innerHTML = `<div class="col-span-full text-center py-12 text-zinc-500 font-mono text-xs">No viral trend metrics harvested for this filter selection.</div>`;
-                return;
-            }
-
-            items.forEach((item, index) => {
-                const card = document.createElement('div');
-                card.className = "bg-bgPanel border border-borderMain hover:border-accent/50 transition-all rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-5 relative overflow-hidden group";
-
-                if (type === 'hashtags') {
-                    const rank = item.Rank || (index + 1);
-                    const hashtagName = item.Hashtag || item.hashtag_name || item.name || 'hashtag';
-                    const views = formatNum(item["Video Views"] || item.views || item.video_views);
-                    const posts = formatNum(item.Posts || item.publish_cnt);
-                    const tiktokUrl = item["TikTok URL"] || `https://www.tiktok.com/tag/${hashtagName.replace('#', '')}`;
-                    const creators = item["Top Creators"] || [];
-
-                    let creatorsHtml = '';
-                    if (creators && creators.length > 0) {
-                        creatorsHtml = `
-                            <div class="pt-3 border-t border-borderMain/60 space-y-2">
-                                <p class="text-[10px] font-mono uppercase text-zinc-500 tracking-wider flex items-center justify-between">
-                                    <span>Top Creators</span>
-                                    <i class="fas fa-fire text-amber-500 text-[10px]"></i>
-                                </p>
-                                <div class="space-y-1.5">
-                                    ${creators.slice(0, 2).map(c => `
-                                        <div class="flex items-center justify-between text-xs bg-bgMain p-2 rounded-lg border border-borderMain/40">
-                                            <div class="flex items-center gap-2 truncate">
-                                                <div class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px] font-bold shrink-0">
-                                                    ${c.nickname ? c.nickname.charAt(0) : '@'}
-                                                </div>
-                                                <span class="text-zinc-200 font-medium truncate">${c.nickname || c.handle}</span>
-                                            </div>
-                                            <span class="text-[10px] font-mono text-zinc-400 shrink-0">${formatNum(c.followers)} fans</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    card.innerHTML = `
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-start gap-2">
-                                <div class="flex items-center gap-2.5">
-                                    <span class="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 text-accent font-mono text-xs font-bold flex items-center justify-center">
-                                        #${rank}
-                                    </span>
-                                    <h4 class="font-bold text-base text-white tracking-tight group-hover:text-accent transition-colors truncate">
-                                        ${hashtagName.startsWith('#') ? hashtagName : '#' + hashtagName}
-                                    </h4>
-                                </div>
-                                <span class="text-[9px] uppercase font-mono font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full shrink-0">
-                                    Hashtag
-                                </span>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3 bg-bgMain p-3 rounded-xl border border-borderMain/50">
-                                <div>
-                                    <p class="text-[10px] font-mono text-zinc-500 uppercase">Video Views</p>
-                                    <p class="text-sm font-bold font-mono text-white mt-0.5">${views}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-mono text-zinc-500 uppercase">Total Posts</p>
-                                    <p class="text-sm font-bold font-mono text-zinc-300 mt-0.5">${posts}</p>
-                                </div>
-                            </div>
-
-                            ${creatorsHtml}
-                        </div>
-
-                        <div class="pt-3 border-t border-borderMain/50 flex justify-between items-center">
-                            <a href="${tiktokUrl}" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-accent font-semibold hover:underline">
-                                <span>Inspect on TikTok</span>
-                                <i class="fas fa-arrow-up-right-from-square text-[10px]"></i>
-                            </a>
-                            <span class="text-[10px] font-mono text-green-400 flex items-center gap-1">
-                                <i class="fas fa-arrow-trend-up"></i> Live
-                            </span>
-                        </div>
-                    `;
-                } else {
-                    const videoTitle = item.title || item.item_from || 'Viral TikTok Content';
-                    const views = formatNum(item.play_count || item.views);
-                    const likes = formatNum(item.digg_count || item.likes);
-                    const shares = formatNum(item.share_count || item.shares);
-                    const videoUrl = item.play_url || item.item_url || '#';
-
-                    card.innerHTML = `
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-start gap-2">
-                                <h4 class="font-medium text-xs text-zinc-200 line-clamp-2 leading-relaxed">
-                                    ${videoTitle}
-                                </h4>
-                                <span class="text-[9px] uppercase font-mono font-bold bg-pink-500/10 text-pink-400 border border-pink-500/20 px-2 py-0.5 rounded-full shrink-0">
-                                    Video
-                                </span>
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-2 bg-bgMain p-3 rounded-xl border border-borderMain/50 font-mono text-center">
-                                <div>
-                                    <p class="text-[9px] text-zinc-500 uppercase">Views</p>
-                                    <p class="text-xs font-bold text-white mt-0.5">${views}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[9px] text-zinc-500 uppercase">Likes</p>
-                                    <p class="text-xs font-bold text-zinc-300 mt-0.5">${likes}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[9px] text-zinc-500 uppercase">Shares</p>
-                                    <p class="text-xs font-bold text-zinc-300 mt-0.5">${shares}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="pt-3 border-t border-borderMain/50 flex justify-between items-center">
-                            <a href="${videoUrl}" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-accent font-semibold hover:underline">
-                                <span>Watch Video</span>
-                                <i class="fas fa-play text-[9px]"></i>
-                            </a>
-                        </div>
-                    `;
-                }
-                resultsGrid.appendChild(card);
-            });
-        }
-
-        function showPaywall(msg) {
-            if (msg) document.getElementById('paywallMessage').innerText = msg;
-            document.getElementById('paywallModal').classList.remove('hidden');
-        }
-
-        function closePaywall() {
-            document.getElementById('paywallModal').classList.add('hidden');
-        }
-    </script>
+<body>
+  <div class="card">
+    <div class="check">✓</div>
+    <h1>Your AllStack dashboard is ready.</h1>
+    <p class="sub">
+      Save this link — it's the only place to access your dashboard.
+    </p>
+    <div class="url-box">all-stack.whop.site</div>
+    <p class="bookmark">
+      <span>📌</span> Bookmark it now so you never lose it.
+    </p>
+    <a class="btn" href="https://all-stack.whop.site">Open My Dashboard →</a>
+    <p class="footer">
+      You can also find this link anytime in your Whop purchases.
+    </p>
+  </div>
 </body>
 </html>
