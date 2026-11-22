@@ -6,18 +6,12 @@
 <title>AllStack — Dashboard Ready</title>
 <style>
   :root {
-    --bg: #0A0810;
-    --glass: rgba(255, 255, 255, 0.045);
-    --glass-strong: rgba(255, 255, 255, 0.08);
-    --border: rgba(255, 255, 255, 0.09);
-    --border-bright: rgba(255, 255, 255, 0.18);
+    --bg: #0A0A0A;
+    --glass: rgba(255, 255, 255, 0.04);
+    --border: rgba(255, 255, 255, 0.10);
     --text: #FFFFFF;
-    --muted: #9A95A3;
-    --mono: #C9C4D1;
-    --accent: #A855F7;
-    --accent-hover: #9333EA;
-    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --mono-font: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+    --muted: #8A8A8E;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -34,27 +28,26 @@
     overflow: hidden;
   }
 
-  /* Ambient glow blobs behind the glass */
   body::before,
   body::after {
     content: '';
     position: fixed;
     border-radius: 50%;
-    filter: blur(100px);
+    filter: blur(120px);
     pointer-events: none;
     z-index: 0;
   }
   body::before {
     width: 620px;
     height: 620px;
-    background: radial-gradient(circle, rgba(168, 85, 247, 0.32), transparent 70%);
-    top: -200px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.10), transparent 70%);
+    top: -220px;
     left: -180px;
   }
   body::after {
     width: 560px;
     height: 560px;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.20), transparent 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.06), transparent 70%);
     bottom: -220px;
     right: -160px;
   }
@@ -63,41 +56,41 @@
     position: relative;
     z-index: 1;
     background: var(--glass);
-    backdrop-filter: blur(32px) saturate(180%);
-    -webkit-backdrop-filter: blur(32px) saturate(180%);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
     border: 1px solid var(--border);
     border-radius: 22px;
-    padding: 56px 40px 48px;
-    max-width: 520px;
+    padding: 64px 40px 56px;
+    max-width: 480px;
     width: 100%;
     text-align: center;
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.10) inset,
-      0 -1px 0 rgba(0, 0, 0, 0.30) inset,
-      0 24px 60px rgba(0, 0, 0, 0.55),
-      0 8px 24px rgba(0, 0, 0, 0.35);
+      0 1px 0 rgba(255, 255, 255, 0.12) inset,
+      0 -1px 0 rgba(0, 0, 0, 0.40) inset,
+      0 24px 60px rgba(0, 0, 0, 0.65),
+      0 8px 24px rgba(0, 0, 0, 0.40);
   }
 
   .check {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     margin: 0 auto 28px;
     border-radius: 50%;
-    background: rgba(168, 85, 247, 0.15);
-    border: 1px solid rgba(168, 85, 247, 0.40);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.20);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 26px;
-    color: var(--accent);
-    box-shadow: 0 0 30px rgba(168, 85, 247, 0.30);
+    font-size: 28px;
+    color: var(--text);
+    box-shadow: 0 0 32px rgba(255, 255, 255, 0.10);
   }
 
   h1 {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 600;
-    letter-spacing: -0.5px;
-    margin-bottom: 12px;
+    letter-spacing: -0.6px;
+    margin-bottom: 14px;
     color: var(--text);
   }
 
@@ -105,154 +98,48 @@
     font-size: 15px;
     color: var(--muted);
     line-height: 1.55;
-    margin-bottom: 32px;
-  }
-
-  .url-box {
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 20px;
-    font-family: var(--mono-font);
-    font-size: 14px;
-    color: var(--mono);
-    margin-bottom: 14px;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .url-box:hover {
-    border-color: var(--border-bright);
-    background: rgba(0, 0, 0, 0.45);
-  }
-  .url-box:active {
-    transform: scale(0.99);
-  }
-  .url-box .url-text {
-    flex: 1;
-    text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .url-box .copy-hint {
-    font-family: var(--font);
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    font-weight: 500;
-    flex-shrink: 0;
-    transition: color 0.15s ease;
-  }
-  .url-box.copied .copy-hint {
-    color: #22C55E;
-  }
-
-  .bookmark {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  .bookmark span {
-    color: var(--accent);
-    font-weight: 500;
+    margin-bottom: 40px;
   }
 
   .btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
-    padding: 15px 24px;
-    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-hover) 100%);
-    color: #fff;
+    padding: 20px 24px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #E5E5E7 100%);
+    color: #0A0A0A;
     text-decoration: none;
-    border-radius: 12px;
-    font-size: 15px;
+    border-radius: 14px;
+    font-size: 17px;
     font-weight: 600;
-    letter-spacing: 0.2px;
+    letter-spacing: -0.2px;
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.20) inset,
-      0 8px 24px rgba(168, 85, 247, 0.35);
+      0 1px 0 rgba(255, 255, 255, 0.80) inset,
+      0 10px 30px rgba(255, 255, 255, 0.14);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
   .btn:hover {
     transform: translateY(-1px);
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.25) inset,
-      0 12px 32px rgba(168, 85, 247, 0.45);
+      0 1px 0 rgba(255, 255, 255, 0.90) inset,
+      0 14px 40px rgba(255, 255, 255, 0.22);
   }
-  .btn:active {
-    transform: translateY(0);
-  }
-
-  .footer {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 24px;
-    line-height: 1.5;
-  }
+  .btn:active { transform: translateY(0); }
 </style>
 </head>
 <body>
   <div class="card">
     <div class="check">✓</div>
-    <h1>Your AllStack dashboard is ready.</h1>
-    <p class="sub">Save this link — it's the only place to access your dashboard.</p>
+    <h1>Your dashboard is ready.</h1>
+    <p class="sub">Everything is set up. You're good to go.</p>
 
-    <div class="url-box" id="urlBox" role="button" tabindex="0" aria-label="Copy dashboard URL">
-      <span class="url-text" id="urlText">all-stack.whop.site</span>
-      <span class="copy-hint" id="copyHint">Click to copy</span>
-    </div>
-
-    <p class="bookmark"><span>📌</span> Bookmark it now so you never lose it.</p>
-
-    <a class="btn" href="https://all-stack.whop.site">Open My Dashboard →</a>
-
-    <p class="footer">You can also find this link anytime in your Whop purchases.</p>
+    <a class="btn"
+       href="https://all-stack.whop.site"
+       target="_blank"
+       rel="noopener noreferrer">
+      Open My Dashboard →
+    </a>
   </div>
-
-<script>
-  const urlBox = document.getElementById('urlBox');
-  const copyHint = document.getElementById('copyHint');
-  const DASHBOARD_URL = 'https://all-stack.whop.site';
-
-  async function copyUrl() {
-    try {
-      await navigator.clipboard.writeText(DASHBOARD_URL);
-    } catch {
-      // Fallback for browsers without clipboard API
-      const ta = document.createElement('textarea');
-      ta.value = DASHBOARD_URL;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); } catch {}
-      document.body.removeChild(ta);
-    }
-    urlBox.classList.add('copied');
-    copyHint.textContent = '✓ Copied';
-    clearTimeout(copyUrl._t);
-    copyUrl._t = setTimeout(() => {
-      urlBox.classList.remove('copied');
-      copyHint.textContent = 'Click to copy';
-    }, 1800);
-  }
-
-  urlBox.addEventListener('click', copyUrl);
-  urlBox.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyUrl(); }
-  });
-</script>
 </body>
 </html>
